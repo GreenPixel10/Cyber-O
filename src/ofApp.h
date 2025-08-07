@@ -28,6 +28,8 @@ class ofApp : public ofBaseApp{
 		void load_map();
 		std::vector<LineFeature> contours;
 		std::vector<std::vector<std::string>> parse_delimited(std::string s, char d1, char d2);
+		glm::vec2 scale;
+		glm::vec2 offset;
 		
 		
 };

@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <iostream>
+#include "ofMain.h"
 
 
 class Point {
@@ -39,9 +40,20 @@ class LineFeature : public Feature {
 		inline void add_point(LinePoint p) { points.push_back(p); }
 
 		void construct_splines();
+		void construct_polyline(glm::vec2 scale, glm::vec2 offset);
+		void draw();
+
+		
+		Point min_coords;
+		Point max_coords;
 
 	private:
 		std::vector<LinePoint> points;
 		std::vector<SplinePoint> spline_points;
+
+		bool closed;
+
+		ofPolyline line;
+
 
 };

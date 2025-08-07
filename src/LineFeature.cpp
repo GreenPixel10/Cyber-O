@@ -9,7 +9,7 @@ LinePoint::LinePoint(std::vector<std::string> p) {
 SplinePoint::SplinePoint(Point p, Point p_h, Point n_h): pos(p), p_handle(p_h), n_handle(n_h){}
 
 LineFeature::LineFeature() {
-
+	closed = false;
 }
 
 
@@ -58,7 +58,8 @@ void LineFeature::construct_splines() {
 				{
 					Point p_last = full_points[next_index - 1]; //get p_handle of end point
 					full_points[0] = p_last; //stick it to the beginning
-					//DON'T increment point counter (I'm not bothering to store the last point again)
+					//DON'T increment point counter (start point gets duplicated later)
+					closed = true;
 					break;
 				}
 
@@ -73,11 +74,31 @@ void LineFeature::construct_splines() {
 		
 	}
 
+	max_coords = Point { INT_MIN, INT_MIN, false };
+	min_coords = Point { INT_MAX, INT_MAX, false };
+
 	for (int m = 0; m < num_points; m++) {
 		int index = (m * 3) + 1;
 		spline_points.push_back(SplinePoint(full_points[index], full_points[index - 1], full_points[index + 1]));
+		if (full_points[index].x > max_coords.x) {max_coords.x = full_points[index].x;}
+		if (full_points[index].y > max_coords.y) {max_coords.y = full_points[index].y;}
+		if (full_points[index].x < min_coords.x) {min_coords.x = full_points[index].x;}
+		if (full_points[index].y < min_coords.y) {min_coords.y = full_points[index].y;}
 	}
-	
 
 
+}
+
+void LineFeature::construct_polyline(glm::vec2 scale, glm::vec2 offset) {
+	for (auto & sp : spline_points) {
+		int x = (sp.pos.x - offset.x) / scale.x;
+		int y = (sp.pos.y - offset.y) / scale.y;
+		line.addVertex(x,y);
+	}
+	line.setClosed(closed);
+}
+
+
+void LineFeature::draw() {
+	line.draw();
 }

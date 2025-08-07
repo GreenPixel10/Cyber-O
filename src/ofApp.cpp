@@ -3,14 +3,44 @@
 
 //--------------------------------------------------------------
 void ofApp::setup() {
+
+	ofBackground(0, 0, 0);
+
+
 	load_map();
 
+	glm::vec2 max_coords = glm::vec2 (INT_MIN, INT_MIN);
+	glm::vec2 min_coords = glm::vec2 (INT_MAX, INT_MAX);
 
+	for (auto& c : contours) {
+		if (c.max_coords.x > max_coords.x) {max_coords.x = c.max_coords.x;} //why did i not use built ins??
+		if (c.max_coords.y > max_coords.y) {max_coords.y = c.max_coords.y;}
+		if (c.min_coords.x < min_coords.x) {min_coords.x = c.min_coords.x;}
+		if (c.min_coords.y < min_coords.y) {min_coords.y = c.min_coords.y;}
+	}
+
+	int margin = 10000;
+	//max_coords += glm::vec2(margin, margin);
+	//min_coords -= glm::vec2(margin, margin);
+
+	offset = min_coords;
+
+	scale = max_coords;
+	scale -= min_coords;
+	scale /= glm::vec2(1024, 768);
+	scale *= 1.5;
+
+	for (auto & c : contours) {
+		c.construct_polyline(scale, offset);
+	}
 }
 
 void ofApp::load_map() {
 
-	if (!omap.load("D:/Projects/OrienteeringSim/test2.omap")) {
+	std::string filename = "D:/Projects/OrienteeringSim/CampFortune.omap";
+	//std::string filename = "D:/Projects/OrienteeringSim/test2.omap";
+
+	if (!omap.load(filename)) {
 		ofLogError() << "Couldn't load file";
 	}
 
@@ -22,7 +52,7 @@ void ofApp::load_map() {
 		auto objs = pt.getChild("objects");
 		auto objlist = objs.getChildren("object");
 
-		for (auto & obj : objlist) {
+		for (auto & obj : objlist) { //should filter for line features here (and then points etc)
 			auto coords = obj.getChild("coords");
 			std::vector<std::vector<std::string>> test = parse_delimited(coords.getValue(), ';', ' ');
 			contours.push_back(LineFeature());
@@ -71,7 +101,9 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-
+	for (auto & c : contours) {
+		c.draw();
+	}
 }
 
 //--------------------------------------------------------------
