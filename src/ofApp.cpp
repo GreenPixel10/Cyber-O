@@ -4,7 +4,8 @@
 //--------------------------------------------------------------
 void ofApp::setup() {
 	load_map();
-	cout << contours.size() << "\n";
+
+
 }
 
 void ofApp::load_map() {
@@ -28,10 +29,10 @@ void ofApp::load_map() {
 			for (auto& p : test) {
 				contours.back().add_point(LinePoint(p));
 			}
+			contours.back().construct_splines();
 		}
 	}
 
-	//string test_s = "-28722 -3915;-22732 -40940;2042 -5140;-28722 -3915 18;";
 	
 
 }
