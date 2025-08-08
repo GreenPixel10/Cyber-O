@@ -35,6 +35,7 @@ void LineFeature::construct_splines() {
 
 			case (-1): //straight segment next
 			case (16): //end of line, spline previous
+			case (32): //unsure
 				full_points[next_index] = p.pos; //just add point
 				num_points++;
 				break;
@@ -90,11 +91,11 @@ void LineFeature::construct_splines() {
 
 }
 
-void LineFeature::construct_polyline(double scale, glm::vec2 offset) {
+void LineFeature::construct_polyline() {
 	line.clear();
 	for (auto & sp : spline_points) {
-		int x = (sp.pos.x + offset.x) * scale;
-		int y = (sp.pos.y + offset.y) * scale;
+		int x = sp.pos.x;
+		int y = sp.pos.y;
 		line.addVertex(x,y);
 	}
 	line.setClosed(closed);
@@ -102,7 +103,6 @@ void LineFeature::construct_polyline(double scale, glm::vec2 offset) {
 
 
 void LineFeature::draw() {
-	std::cout << "d_L\n";
 
 	ofSetColor(col);
 	line.draw();

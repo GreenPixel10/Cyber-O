@@ -30,6 +30,9 @@ class ofApp : public ofBaseApp{
 
 
 	private:
+
+		ofCamera camera;
+
 		ofXml omap;
 		void load_map(std::string);
 		void load_symbols();
@@ -48,4 +51,7 @@ class ofApp : public ofBaseApp{
 		std::vector<PointFeature> point_features;
 
 		std::map<int, std::vector<Feature*>> features; //indexed by S_CODE
+
+
+		int zoom;
 };

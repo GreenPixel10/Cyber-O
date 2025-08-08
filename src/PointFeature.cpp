@@ -3,21 +3,20 @@
 
 
 PointFeature::PointFeature(glm::vec2 pos_)
-	: pos(pos_) {
+	: pos(pos_), rot(0){
 	col = ofColor::green;
 }
 
-void PointFeature::construct_point(double scale, glm::vec2 offset) {
+void PointFeature::construct_point() {
 	symbol = glm::vec3();
-	symbol.x = (pos.x + offset.x) * scale;
-	symbol.y = (pos.y + offset.y) * scale;
-	symbol.z = 1000 * scale;
+	symbol.x = pos.x;
+	symbol.y = pos.y;
+	symbol.z = 500;
 	
 }
 
 
 void PointFeature::draw() {
-	std::cout << "d_P\n";
 	ofSetColor(col);
 	ofDrawCircle(symbol.x, symbol.y, symbol.z);
 }

@@ -6,9 +6,18 @@ void ofApp::setup() {
 
 	ofBackground(0, 0, 0);
 
+	zoom = 11;
+	#define ORTHO_HEIGHT 100
+	camera.enableOrtho();
+	camera.setNearClip(-100000);
+	camera.setFarClip(100000);
+	camera.setVFlip(true);
+	
+	//camera.setFov()
 
-	load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
+	//load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
 	//load_map("D:/Projects/OrienteeringSim/test2.omap");
+	load_map("D:/Projects/OrienteeringSim/forest.omap");
 
 	load_symbols();
 
@@ -66,8 +75,6 @@ void ofApp::load_features() {
 			int omapID = obj.getAttribute("symbol").getIntValue();
 			int S_CODE = (sm.get_symbol_by_omapID(omapID))->get_S_CODE(); //eg. S_CLIFF
 			f->set_S_CODE(S_CODE);
-			std::cout << S_CODE << "$$\n";
-			std::cout << f->get_S_CODE() << "##\n";
 			features[S_CODE].push_back(f); //eg. add to S_CLIFF list
 	
 			
@@ -152,23 +159,25 @@ void ofApp::get_view_transforms(int window_x, int window_y) {
 	max_coords += glm::vec2(margin, margin);
 	min_coords -= glm::vec2(margin, margin);
 
-	offset = -min_coords;
+	glm::vec2 dims = max_coords - min_coords;
 
-	scale = max_coords - min_coords;
+	int max_side = std::max(dims.x, dims.y);
+	zoom = max_side / 1000;
 
-	int size = std::max(scale.x, scale.y); 
-	size /= std::min(window_x, window_y);
+	glm::vec2 centre = glm::vec2((min_coords.x + max_coords.x)/2, (min_coords.y + max_coords.y)/2);
 
-	double square = 1.0 / size;
-	
+
+	camera.setScale(zoom);
+	camera.setPosition(glm::vec3(centre, ORTHO_HEIGHT));
+
 
 
 	for (auto & c : line_features) {
-		c.construct_polyline(square, offset);
+		c.construct_polyline();
 
 	}
 	for (auto & t : point_features) {
-		t.construct_point(square, offset);
+		t.construct_point();
 	}
 
 
@@ -203,11 +212,22 @@ std::vector<std::vector<std::string>> ofApp::parse_delimited(std::string s, char
 
 //--------------------------------------------------------------
 void ofApp::update(){
+	
 
+	camera.setScale(zoom);
+
+	///glm::vec3 cam_pos = camera.getPosition();
+	//std::cout << cam_pos.x << ", " << cam_pos.y << ", " << zoom << "\n";
+	//std::cout << line_features[0].min_coords.x << ", " << line_features[0].min_coords.y << "\n\n";
 }
 
 //--------------------------------------------------------------
 void ofApp::draw(){
+
+
+	camera.begin();
+
+
 	for (auto & c : line_features) {
 		c.draw();
 	}
@@ -221,15 +241,25 @@ void ofApp::draw(){
 		//f->draw();
 	}
 
+	camera.end();
+
 }
 
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
+	int speed = zoom * zoom;
+	if (key == 'w') camera.setPosition(camera.getPosition() + glm::vec3(0, speed, 0));
+	if (key == 'a') camera.setPosition(camera.getPosition() + glm::vec3(-speed, 0, 0));
+	if (key == 's') camera.setPosition(camera.getPosition() + glm::vec3(0, -speed, 0));
+	if (key == 'd') camera.setPosition(camera.getPosition() + glm::vec3(speed, 0, 0));
 
+	if (key == 'q') zoom -= 2;
+	if (key == 'e') zoom += 2;
 }
 
 //--------------------------------------------------------------
 void ofApp::keyReleased(int key){
+
 
 }
 

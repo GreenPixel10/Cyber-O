@@ -14,7 +14,7 @@ class PointFeature : public Feature {
 	public:
 		PointFeature(glm::vec2 pos_);
 
-		void construct_point(double scale, glm::vec2 offset);
+		void construct_point();
 		void draw();
 
 
