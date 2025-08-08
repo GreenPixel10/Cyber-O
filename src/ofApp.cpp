@@ -11,8 +11,14 @@ void ofApp::setup() {
 	//load_map("D:/Projects/OrienteeringSim/test2.omap");
 
 	load_symbols();
+
+	for (auto const & [S_CODE, names] : sm.symbol_names) {
+		features[S_CODE] = {};
+	}
+
 	load_features();
 	get_view_transforms(win_w, win_h);
+
 
 
 
@@ -30,10 +36,6 @@ void ofApp::load_map(std::string mapname) {
 
 void ofApp::load_features() {
 
-	int n_contours = 0;
-	int n_cliffs = 0;
-	int n_mincliffs = 0;
-	int n_tags = 0;
 
 	auto parts = omap.findFirst("//parts");
 	auto partlist = parts.getChildren("part");
@@ -42,12 +44,32 @@ void ofApp::load_features() {
 		auto objs = pt.getChild("objects");
 		auto objlist = objs.getChildren("object");
 
-		for (auto & obj : objlist) {
+		for (auto & obj : objlist) { //for each drawn feature
 
-			int symboltype = obj.getAttribute("symbol").getIntValue();
-			sm.
-			
+			int symboltype = obj.getAttribute("symbol").getIntValue(); //eg. cliff
+			Symbol* s = sm.get_symbol_by_omapID(symboltype); //eg. cliff symbol template
+			if (!s) { continue;} //eg. mysterious -3 symbol
 
+			Feature* f = nullptr; //eg. specific cliff
+
+			int category = s->get_symbol_category(); //eg. line
+
+			if (category == SC_POINT) {
+				f = load_point_feature(obj);
+			}
+			if (category == SC_LINE) {
+				f = load_line_feature(obj);
+			}
+
+			if (!f) { continue;} //eg. text items (for now)
+
+			int omapID = obj.getAttribute("symbol").getIntValue();
+			int S_CODE = (sm.get_symbol_by_omapID(omapID))->get_S_CODE(); //eg. S_CLIFF
+			f->set_S_CODE(S_CODE);
+			std::cout << S_CODE << "$$\n";
+			std::cout << f->get_S_CODE() << "##\n";
+			features[S_CODE].push_back(f); //eg. add to S_CLIFF list
+	
 			
 
 			
@@ -60,21 +82,38 @@ void ofApp::load_features() {
 
 
 
-void ofApp::load_line_feature(ofXml obj) {
+Feature* ofApp::load_line_feature(ofXml obj) {
+
+	line_features.push_back(LineFeature());
+
+
+
 	auto coords = obj.getChild("coords");
 	std::vector<std::vector<std::string>> test = parse_delimited(coords.getValue(), ';', ' ');
-	line_features.push_back(LineFeature());
 	for (auto & p : test) {
 		line_features.back().add_point(LinePoint(p));
 	}
 	line_features.back().construct_splines();
+
+	return &line_features.back();
 }
 
-void ofApp::load_point_feature(ofXml obj) {
+Feature* ofApp::load_point_feature(ofXml obj) {
+
+
 	auto coords = obj.getChild("coords");
+
 	std::vector<std::vector<std::string>> test = parse_delimited(coords.getValue(), ';', ' ');
 	glm::vec2 pos = glm::vec2(std::stoi(test[0][0]), std::stoi(test[0][1]));
+
 	point_features.push_back(PointFeature(pos));
+
+
+
+
+	return &point_features.back();
+
+	
 }
 
 void ofApp::load_symbols() {
@@ -83,7 +122,8 @@ void ofApp::load_symbols() {
 	for (auto& s : symbol_list) {
 		int id = s.getAttribute("id").getIntValue();
 		std::string name = s.getAttribute("name").getValue();
-		sm.add_symbol(new Symbol(id, name));
+		int s_cat = s.getAttribute("type").getIntValue();
+		sm.add_symbol(new Symbol(id, name, s_cat));
 	}
 
 }
@@ -93,7 +133,7 @@ void ofApp::get_view_transforms(int window_x, int window_y) {
 	glm::vec2 max_coords = glm::vec2(INT_MIN, INT_MIN);
 	glm::vec2 min_coords = glm::vec2(INT_MAX, INT_MAX);
 
-	for (auto & c : contours) {
+	for (auto & c : line_features) {
 		if (c.max_coords.x > max_coords.x) {
 			max_coords.x = c.max_coords.x;
 		} //why did i not use built ins??
@@ -123,11 +163,11 @@ void ofApp::get_view_transforms(int window_x, int window_y) {
 	
 
 
-	for (auto & c : contours) {
+	for (auto & c : line_features) {
 		c.construct_polyline(square, offset);
 
 	}
-	for (auto & t : tags) {
+	for (auto & t : point_features) {
 		t.construct_point(square, offset);
 	}
 
@@ -168,13 +208,19 @@ void ofApp::update(){
 
 //--------------------------------------------------------------
 void ofApp::draw(){
-	for (auto & c : contours) {
+	for (auto & c : line_features) {
 		c.draw();
 	}
 
-	for (auto & t : tags) {
+	for (auto & t : point_features) {
 		t.draw();
 	}
+
+	for (auto f : features[S_CONTOUR]) {
+		//std::cout << f->get_S_CODE() << "-----\n";
+		//f->draw();
+	}
+
 }
 
 //--------------------------------------------------------------

@@ -102,6 +102,8 @@ void LineFeature::construct_polyline(double scale, glm::vec2 offset) {
 
 
 void LineFeature::draw() {
+	std::cout << "d_L\n";
+
 	ofSetColor(col);
 	line.draw();
 }

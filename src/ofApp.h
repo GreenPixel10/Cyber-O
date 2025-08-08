@@ -34,8 +34,8 @@ class ofApp : public ofBaseApp{
 		void load_map(std::string);
 		void load_symbols();
 		void load_features();
-		void load_line_feature(ofXml obj);
-		void load_point_feature(ofXml obj);
+		Feature* load_line_feature(ofXml obj);
+		Feature* load_point_feature(ofXml obj);
 		void get_view_transforms(int, int);
 		
 		std::vector<std::vector<std::string>> parse_delimited(std::string s, char d1, char d2);
@@ -46,4 +46,6 @@ class ofApp : public ofBaseApp{
 		
 		std::vector<LineFeature> line_features;
 		std::vector<PointFeature> point_features;
+
+		std::map<int, std::vector<Feature*>> features; //indexed by S_CODE
 };

@@ -17,6 +17,7 @@ void PointFeature::construct_point(double scale, glm::vec2 offset) {
 
 
 void PointFeature::draw() {
+	std::cout << "d_P\n";
 	ofSetColor(col);
 	ofDrawCircle(symbol.x, symbol.y, symbol.z);
 }
