@@ -15,9 +15,9 @@ void ofApp::setup() {
 	
 	//camera.setFov()
 
-	//load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
+	load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
 	//load_map("D:/Projects/OrienteeringSim/test2.omap");
-	load_map("D:/Projects/OrienteeringSim/forest.omap");
+	//load_map("D:/Projects/OrienteeringSim/forest.omap");
 
 
 	load_colours();
@@ -25,8 +25,9 @@ void ofApp::setup() {
 	load_symbols();
 
 	for (auto const & [S_CODE, names] : sm.symbol_names) {
-		features[S_CODE] = {};
+		features[S_CODE] = std::vector<Feature*>{};
 	}
+
 
 	load_features();
 	get_view_transforms(win_w, win_h);
@@ -61,18 +62,20 @@ void ofApp::load_features() {
 			Symbol* s = sm.get_symbol_by_omapID(symboltype); //eg. cliff symbol template
 			if (!s) { continue;} //eg. mysterious -3 symbol
 
-			Feature* f = nullptr; //eg. specific cliff
+			Feature* f; //eg. specific cliff
 
 			int category = s->get_symbol_category(); //eg. line
 
 			if (category == SC_POINT) {
 				f = load_point_feature(obj);
 			}
-			if (category == SC_LINE) {
+			else if (category == SC_LINE) {
 				f = load_line_feature(obj);
 			}
 
-			if (!f) { continue;} //eg. text items (for now)
+			else {
+				continue; //eg. text items (for now)
+			}
 
 			int omapID = obj.getAttribute("symbol").getIntValue();
 			Symbol* symbol = sm.get_symbol_by_omapID(omapID);
@@ -95,18 +98,18 @@ void ofApp::load_features() {
 
 Feature* ofApp::load_line_feature(ofXml obj) {
 
-	line_features.push_back(LineFeature());
+	line_features.push_back(new  LineFeature());
 
 
 
 	auto coords = obj.getChild("coords");
 	std::vector<std::vector<std::string>> test = parse_delimited(coords.getValue(), ';', ' ');
 	for (auto & p : test) {
-		line_features.back().add_point(LinePoint(p));
+		line_features.back()->add_point(LinePoint(p));
 	}
-	line_features.back().construct_splines();
+	line_features.back()->construct_splines();
 
-	return &line_features.back();
+	return line_features.back();
 }
 
 Feature* ofApp::load_point_feature(ofXml obj) {
@@ -117,12 +120,12 @@ Feature* ofApp::load_point_feature(ofXml obj) {
 	std::vector<std::vector<std::string>> test = parse_delimited(coords.getValue(), ';', ' ');
 	glm::vec2 pos = glm::vec2(std::stoi(test[0][0]), std::stoi(test[0][1]));
 
-	point_features.push_back(PointFeature(pos));
+	point_features.push_back(new PointFeature(pos));
 
 
 
 
-	return &point_features.back();
+	return point_features.back();
 
 	
 }
@@ -157,17 +160,17 @@ void ofApp::get_view_transforms(int window_x, int window_y) {
 	glm::vec2 min_coords = glm::vec2(INT_MAX, INT_MAX);
 
 	for (auto & c : line_features) {
-		if (c.max_coords.x > max_coords.x) {
-			max_coords.x = c.max_coords.x;
+		if (c->max_coords.x > max_coords.x) {
+			max_coords.x = c->max_coords.x;
 		} //why did i not use built ins??
-		if (c.max_coords.y > max_coords.y) {
-			max_coords.y = c.max_coords.y;
+		if (c->max_coords.y > max_coords.y) {
+			max_coords.y = c->max_coords.y;
 		}
-		if (c.min_coords.x < min_coords.x) {
-			min_coords.x = c.min_coords.x;
+		if (c->min_coords.x < min_coords.x) {
+			min_coords.x = c->min_coords.x;
 		}
-		if (c.min_coords.y < min_coords.y) {
-			min_coords.y = c.min_coords.y;
+		if (c->min_coords.y < min_coords.y) {
+			min_coords.y = c->min_coords.y;
 		}
 	}
 
@@ -189,11 +192,11 @@ void ofApp::get_view_transforms(int window_x, int window_y) {
 
 
 	for (auto & c : line_features) {
-		c.construct_polyline();
+		c->construct_polyline();
 
 	}
 	for (auto & t : point_features) {
-		t.construct_point();
+		t->construct_point();
 	}
 
 
@@ -245,17 +248,22 @@ void ofApp::draw(){
 
 
 	for (auto & c : line_features) {
-		c.draw();
+		//c->draw();
 	}
 
 	for (auto & t : point_features) {
-		t.draw();
+		//t->draw();
 	}
 
-	for (auto f : features[S_CONTOUR]) {
-		//std::cout << f->get_S_CODE() << "-----\n";
-		//f->draw();
+
+	std::vector<int> features_to_draw = { };
+
+	for (auto& ftd : sm.symbol_names) {
+		for (Feature* f : features[ftd.first]) {
+			f->draw();
+		}
 	}
+
 
 	camera.end();
 
@@ -264,13 +272,13 @@ void ofApp::draw(){
 //--------------------------------------------------------------
 void ofApp::keyPressed(int key){
 	int speed = zoom * zoom;
-	if (key == 'w') camera.setPosition(camera.getPosition() + glm::vec3(0, speed, 0));
+	if (key == 's') camera.setPosition(camera.getPosition() + glm::vec3(0, speed, 0));
 	if (key == 'a') camera.setPosition(camera.getPosition() + glm::vec3(-speed, 0, 0));
-	if (key == 's') camera.setPosition(camera.getPosition() + glm::vec3(0, -speed, 0));
+	if (key == 'w') camera.setPosition(camera.getPosition() + glm::vec3(0, -speed, 0));
 	if (key == 'd') camera.setPosition(camera.getPosition() + glm::vec3(speed, 0, 0));
 
-	if (key == 'q') zoom -= 2;
-	if (key == 'e') zoom += 2;
+	if (key == 'e') zoom /= 1.2;
+	if (key == 'q') zoom *= 1.2;
 }
 
 //--------------------------------------------------------------

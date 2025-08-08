@@ -48,8 +48,8 @@ class ofApp : public ofBaseApp{
 
 		SymbolManager sm;
 		
-		std::vector<LineFeature> line_features;
-		std::vector<PointFeature> point_features;
+		std::vector<LineFeature*> line_features;
+		std::vector<PointFeature*> point_features;
 
 		std::map<int, std::vector<Feature*>> features; //indexed by S_CODE
 
