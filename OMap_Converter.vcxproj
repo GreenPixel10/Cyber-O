@@ -230,11 +230,15 @@
     <ClCompile Include="src\LineFeature.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ofApp.cpp" />
+    <ClCompile Include="src\PointFeature.cpp" />
+    <ClCompile Include="src\SymbolManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Feature.h" />
     <ClInclude Include="src\LineFeature.h" />
     <ClInclude Include="src\ofApp.h" />
+    <ClInclude Include="src\PointFeature.h" />
+    <ClInclude Include="src\SymbolManager.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(OF_ROOT)\libs\openFrameworksCompiled\project\vs\openframeworksLib.vcxproj">

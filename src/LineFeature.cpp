@@ -10,6 +10,7 @@ SplinePoint::SplinePoint(Point p, Point p_h, Point n_h): pos(p), p_handle(p_h), 
 
 LineFeature::LineFeature() {
 	closed = false;
+	col = ofColor::white;
 }
 
 
@@ -33,10 +34,13 @@ void LineFeature::construct_splines() {
 		switch (p.pType) {
 
 			case (-1): //straight segment next
+			case (16): //end of line, spline previous
 				full_points[next_index] = p.pos; //just add point
 				num_points++;
 				break;
+
 				
+			case (33): //point with non-linked spline handles
 			case (1): //two spline handles next
 				{
 					LinePoint p2 = points[i + 1];
@@ -49,12 +53,8 @@ void LineFeature::construct_splines() {
 					break;
 				}
 
-			case (16): //end, spline previous
-				full_points[next_index] = p.pos; //just add point (previous spline handles should be added already by case 1)
-				num_points++;
-				break;
-
-			case (18): //end, cycle
+			case (2): //end, cycle 
+			case (18): //end, cycle  (usure diff of 2 and 18)
 				{
 					Point p_last = full_points[next_index - 1]; //get p_handle of end point
 					full_points[0] = p_last; //stick it to the beginning
@@ -63,10 +63,11 @@ void LineFeature::construct_splines() {
 					break;
 				}
 
-
+			
 
 			default:
 				std::cout << "Unknown spline coordinate tag: " << p.pType << "\n";
+				col = ofColor::red;
 
 
 		}
@@ -89,10 +90,11 @@ void LineFeature::construct_splines() {
 
 }
 
-void LineFeature::construct_polyline(glm::vec2 scale, glm::vec2 offset) {
+void LineFeature::construct_polyline(double scale, glm::vec2 offset) {
+	line.clear();
 	for (auto & sp : spline_points) {
-		int x = (sp.pos.x - offset.x) / scale.x;
-		int y = (sp.pos.y - offset.y) / scale.y;
+		int x = (sp.pos.x + offset.x) * scale;
+		int y = (sp.pos.y + offset.y) * scale;
 		line.addVertex(x,y);
 	}
 	line.setClosed(closed);
@@ -100,5 +102,6 @@ void LineFeature::construct_polyline(glm::vec2 scale, glm::vec2 offset) {
 
 
 void LineFeature::draw() {
+	ofSetColor(col);
 	line.draw();
 }

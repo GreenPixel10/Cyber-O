@@ -40,7 +40,7 @@ class LineFeature : public Feature {
 		inline void add_point(LinePoint p) { points.push_back(p); }
 
 		void construct_splines();
-		void construct_polyline(glm::vec2 scale, glm::vec2 offset);
+		void construct_polyline(double scale, glm::vec2 offset);
 		void draw();
 
 		
@@ -54,6 +54,7 @@ class LineFeature : public Feature {
 		bool closed;
 
 		ofPolyline line;
+		//ofColor col;
 
 
 };

@@ -13,6 +13,10 @@
     <ClCompile Include="src\LineFeature.cpp">
       <Filter>src</Filter>
     </ClCompile>
+    <ClCompile Include="src\SymbolManager.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="src\PointFeature.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -29,6 +33,10 @@
     <ClInclude Include="src\LineFeature.h">
       <Filter>src</Filter>
     </ClInclude>
+    <ClInclude Include="src\SymbolManager.h">
+      <Filter>src</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PointFeature.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />
