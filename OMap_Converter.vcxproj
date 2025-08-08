@@ -231,6 +231,7 @@
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\ofApp.cpp" />
     <ClCompile Include="src\PointFeature.cpp" />
+    <ClCompile Include="src\SlopeDetector.cpp" />
     <ClCompile Include="src\SymbolManager.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -238,6 +239,7 @@
     <ClInclude Include="src\LineFeature.h" />
     <ClInclude Include="src\ofApp.h" />
     <ClInclude Include="src\PointFeature.h" />
+    <ClInclude Include="src\SlopeDetector.h" />
     <ClInclude Include="src\SymbolManager.h" />
   </ItemGroup>
   <ItemGroup>

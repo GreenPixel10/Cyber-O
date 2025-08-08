@@ -17,6 +17,7 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="src\PointFeature.cpp" />
+    <ClCompile Include="src\SlopeDetector.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -37,6 +38,7 @@
       <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="src\PointFeature.h" />
+    <ClInclude Include="src\SlopeDetector.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />

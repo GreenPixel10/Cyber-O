@@ -4,6 +4,7 @@
 #include "LineFeature.h"
 #include "PointFeature.h"
 #include "SymbolManager.h"
+#include "SlopeDetector.h"
 
 
 #define win_w 1024
@@ -34,19 +35,21 @@ class ofApp : public ofBaseApp{
 		ofCamera camera;
 
 		ofXml omap;
+		void init_camera();
 		void load_map(std::string);
 		void load_colours();
 		void load_symbols();
 		void load_features();
 		Feature* load_line_feature(ofXml obj);
 		Feature* load_point_feature(ofXml obj);
-		void get_view_transforms(int, int);
+		void get_view_transforms();
 		
 		std::vector<std::vector<std::string>> parse_delimited(std::string s, char d1, char d2);
 		glm::vec2 scale;
 		glm::vec2 offset;
 
 		SymbolManager sm;
+		SlopeDetector sd;
 		
 		std::vector<LineFeature*> line_features;
 		std::vector<PointFeature*> point_features;

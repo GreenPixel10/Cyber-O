@@ -5,15 +5,8 @@
 void ofApp::setup() {
 
 	ofBackground(255, 255, 255);
+	init_camera();
 
-	zoom = 11;
-	#define ORTHO_HEIGHT 100
-	camera.enableOrtho();
-	camera.setNearClip(-100000);
-	camera.setFarClip(100000);
-	camera.setVFlip(true);
-	
-	//camera.setFov()
 
 	load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
 	//load_map("D:/Projects/OrienteeringSim/test2.omap");
@@ -21,20 +14,22 @@ void ofApp::setup() {
 
 
 	load_colours();
-
 	load_symbols();
-
-	for (auto const & [S_CODE, names] : sm.symbol_names) {
-		features[S_CODE] = std::vector<Feature*>{};
-	}
-
-
 	load_features();
-	get_view_transforms(win_w, win_h);
+	get_view_transforms();
 
 
 
 
+}
+
+void ofApp::init_camera() {
+	#define ORTHO_HEIGHT 100
+	zoom = 11;
+	camera.enableOrtho();
+	camera.setNearClip(-100000);
+	camera.setFarClip(100000);
+	camera.setVFlip(true);
 }
 
 void ofApp::load_map(std::string mapname) {
@@ -155,7 +150,7 @@ void ofApp::load_colours() {
 }
 
 
-void ofApp::get_view_transforms(int window_x, int window_y) {
+void ofApp::get_view_transforms() {
 	glm::vec2 max_coords = glm::vec2(INT_MIN, INT_MIN);
 	glm::vec2 min_coords = glm::vec2(INT_MAX, INT_MAX);
 
@@ -319,7 +314,7 @@ void ofApp::mouseExited(int x, int y){
 
 //--------------------------------------------------------------
 void ofApp::windowResized(int w, int h){
-	get_view_transforms(w,h);
+	get_view_transforms();
 }
 
 //--------------------------------------------------------------
