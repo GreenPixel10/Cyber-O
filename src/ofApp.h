@@ -35,6 +35,7 @@ class ofApp : public ofBaseApp{
 
 		ofXml omap;
 		void load_map(std::string);
+		void load_colours();
 		void load_symbols();
 		void load_features();
 		Feature* load_line_feature(ofXml obj);

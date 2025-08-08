@@ -4,7 +4,7 @@
 //--------------------------------------------------------------
 void ofApp::setup() {
 
-	ofBackground(0, 0, 0);
+	ofBackground(255, 255, 255);
 
 	zoom = 11;
 	#define ORTHO_HEIGHT 100
@@ -19,6 +19,9 @@ void ofApp::setup() {
 	//load_map("D:/Projects/OrienteeringSim/test2.omap");
 	load_map("D:/Projects/OrienteeringSim/forest.omap");
 
+
+	load_colours();
+
 	load_symbols();
 
 	for (auto const & [S_CODE, names] : sm.symbol_names) {
@@ -27,7 +30,6 @@ void ofApp::setup() {
 
 	load_features();
 	get_view_transforms(win_w, win_h);
-
 
 
 
@@ -73,8 +75,10 @@ void ofApp::load_features() {
 			if (!f) { continue;} //eg. text items (for now)
 
 			int omapID = obj.getAttribute("symbol").getIntValue();
-			int S_CODE = (sm.get_symbol_by_omapID(omapID))->get_S_CODE(); //eg. S_CLIFF
+			Symbol* symbol = sm.get_symbol_by_omapID(omapID);
+			int S_CODE = symbol->get_S_CODE(); //eg. S_CLIFF
 			f->set_S_CODE(S_CODE);
+			f->set_colour(sm.symbol_colours[S_CODE]);
 			features[S_CODE].push_back(f); //eg. add to S_CLIFF list
 	
 			
@@ -130,9 +134,21 @@ void ofApp::load_symbols() {
 		int id = s.getAttribute("id").getIntValue();
 		std::string name = s.getAttribute("name").getValue();
 		int s_cat = s.getAttribute("type").getIntValue();
-		sm.add_symbol(new Symbol(id, name, s_cat));
+		sm.add_symbol(new Symbol(id, name, s_cat, ofColor::hotPink));
 	}
 
+}
+
+void ofApp::load_colours() {
+	auto all_cols = omap.findFirst("//colors");
+	auto col_list = all_cols.getChildren("color");
+	for (auto & col : col_list) {
+		float c = col.getAttribute("c").getFloatValue();
+		float m = col.getAttribute("m").getFloatValue();
+		float y = col.getAttribute("y").getFloatValue();
+		float k = col.getAttribute("k").getFloatValue();
+		sm.add_colour(c,m,y,k);
+	}
 }
 
 

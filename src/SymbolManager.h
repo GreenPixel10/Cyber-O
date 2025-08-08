@@ -3,7 +3,7 @@
 #include <string>
 #include <vector>
 #include <map>
-
+#include "ofMain.h"
 #include <iostream>
 
 //these are the symbols that THIS program uses/recognizes
@@ -15,6 +15,8 @@
 #define S_CLIFF 1002
 #define S_MIN_CLIFF 1003
 #define S_SLOPE_TAG 1004
+#define S_IMPASSABLE_CLIFF 1005
+#define S_IMPASSABLE_MIN_CLIFF 1006
 
 //symbol categories
 #define SC_UNKNOWN -1
@@ -27,18 +29,22 @@
 
 class Symbol {
 	public:
-		Symbol(int id_, std::string name_, int symbol_category_);
+		Symbol(int id_, std::string name_, int symbol_category_, ofColor display_colour_);
 		inline int get_id() { return id;};
 		inline std::string get_name() {return name; };
 		inline int get_symbol_category() { return symbol_category; }
 		inline int get_S_CODE() { return S_CODE; };
 		inline void set_S_CODE(int S_CODE_) {S_CODE = S_CODE_;  };
+		inline ofColor get_display_colour() { return display_colour;}
+
+		
 
 	private:
 		int id;
 		std::string name;
 		int symbol_category;
 		int S_CODE;
+		ofColor display_colour;
 };
 
 
@@ -50,7 +56,9 @@ class SymbolManager {
 
 		Symbol * get_symbol_by_omapID(int omapID); //ASSUMING that omap IDs are assigned 1-n.
 																			//this may not be true...
-															//in which case might need a omapID->symbol* std::map
+		void add_colour(float c, float m, float y, float k); //in which case might need a omapID->symbol* std::map
+
+		inline ofColor get_colour_by_ID(int col_id) { return colours[col_id]; }
 
 		std::map<int, std::vector<std::string>> symbol_names;
 		//maps S_CODES to potential names
@@ -58,11 +66,14 @@ class SymbolManager {
 		std::map<std::string, int> symbol_S_CODES;
 		//maps names to S_CODES
 
-		//std::map<int, int> symbols_SCODES_by_omapID;
-		//maps omapIDs to S_CODES
+		std::map<int, ofColor> symbol_colours;
+		//maps S_CODES to colours
+
+
 
 
 
 	private:
 		std::vector<Symbol*> symbols;
+		std::vector<ofColor> colours;
 };
