@@ -2,8 +2,8 @@
 #include "PointFeature.h"
 
 
-PointFeature::PointFeature(glm::vec2 pos_)
-	: pos(pos_), rot(0){
+PointFeature::PointFeature(glm::vec2 pos_, float rot_)
+	: pos(pos_), rot(rot_){
 	col = ofColor::green;
 }
 

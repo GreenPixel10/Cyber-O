@@ -18,6 +18,9 @@ void ofApp::setup() {
 	load_features();
 	get_view_transforms();
 
+	sd.set_features(&features);
+	sd.detect_slope();
+
 
 
 
@@ -111,11 +114,12 @@ Feature* ofApp::load_point_feature(ofXml obj) {
 
 
 	auto coords = obj.getChild("coords");
+	float rot = obj.getAttribute("rotation").getFloatValue();
 
 	std::vector<std::vector<std::string>> test = parse_delimited(coords.getValue(), ';', ' ');
 	glm::vec2 pos = glm::vec2(std::stoi(test[0][0]), std::stoi(test[0][1]));
 
-	point_features.push_back(new PointFeature(pos));
+	point_features.push_back(new PointFeature(pos, rot));
 
 
 
@@ -251,13 +255,24 @@ void ofApp::draw(){
 	}
 
 
-	std::vector<int> features_to_draw = { };
+	std::vector<int> features_to_draw = {S_CONTOUR, S_MIN_CLIFF};
 
-	for (auto& ftd : sm.symbol_names) {
-		for (Feature* f : features[ftd.first]) {
-			f->draw();
+	if (features_to_draw.size() > 0) { //render specified
+		for (auto & ftd : features_to_draw) {
+			for (Feature * f : features[ftd]) {
+				f->draw();
+			}
 		}
 	}
+
+	else { //render all
+		for (auto & ftd : sm.symbol_names) {
+			for (Feature * f : features[ftd.first]) {
+				f->draw();
+			}
+		}
+	}
+
 
 
 	camera.end();

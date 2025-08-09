@@ -38,6 +38,8 @@ class LineFeature : public Feature {
 		LineFeature();
 
 		inline void add_point(LinePoint p) { points.push_back(p); }
+		inline ofPolyline get_line() { return line;}
+		inline bool get_closed() { return closed;}
 
 		void construct_splines();
 		void construct_polyline();
@@ -48,13 +50,12 @@ class LineFeature : public Feature {
 		Point max_coords;
 
 	private:
-		std::vector<LinePoint> points;
-		std::vector<SplinePoint> spline_points;
+		std::vector<LinePoint> points; //raw data
+		std::vector<SplinePoint> spline_points; //parsed spline data (3 points in each)
 
 		bool closed;
 
-		ofPolyline line;
-		//ofColor col;
+		ofPolyline line; //draw line
 
 
 };
