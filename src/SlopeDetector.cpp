@@ -4,8 +4,18 @@ SlopeDetector::SlopeDetector() { }
 
 void SlopeDetector::detect_slope() {
 
-	repair_contours();
+	
 
+	std::vector<ofColor> cols = {ofColor::yellow, ofColor::orange,ofColor::red,ofColor::purple,ofColor::blue,ofColor::green};
+	std::vector<std::string> colnames = { "yellow", "orange", "red", "purple", "blue", "green" };
+
+	for (int i = 0; i < (*features)[S_CONTOUR].size(); i++) {
+		auto f = (*features)[S_CONTOUR][i];
+		f->set_colour(cols[i]);
+		f->set_debug(colnames[i]);
+	}
+
+	repair_contours();
 
 	for (auto &f : (*features)[S_CONTOUR]) {
 		LineFeature * contour = dynamic_cast<LineFeature *>(f);
@@ -129,14 +139,17 @@ void SlopeDetector::repair_contours() {
 				
 				if (A_side == _START) {
 					contourA->add_link_prev({ contourB, !aligned });
-					std::cout << "linking!\n";
+
 				}
 				if (A_side == _END) {
 					contourA->add_link_next({ contourB, !aligned });
-					std::cout << "linking!\n";
 				}
-					
-				contourA->set_colour(ofColor::green);
+
+				std::cout << "linking " << ((B_side == _START) ? "start" : "end") << " of " << contourA->get_debug() << " with "
+						  << ((B_side == _START) ? "start" : "end") << " of " << contourB->get_debug() << " \n";
+
+
+				//contourA->set_colour(ofColor::green);
 
 			}
 			
