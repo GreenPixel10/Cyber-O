@@ -8,8 +8,9 @@ void ofApp::setup() {
 	init_camera();
 
 
-	load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
-	//load_map("D:/Projects/OrienteeringSim/test2.omap");
+	//load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
+	//load_map("D:/Projects/OrienteeringSim/ark.omap");
+	load_map("D:/Projects/OrienteeringSim/test2.omap");
 	//load_map("D:/Projects/OrienteeringSim/forest.omap");
 
 
@@ -255,7 +256,8 @@ void ofApp::draw(){
 	}
 
 
-	std::vector<int> features_to_draw = {S_CONTOUR, S_MIN_CLIFF};
+	//std::vector<int> features_to_draw = {S_CONTOUR, S_MIN_CLIFF};
+	std::vector<int> features_to_draw = {};
 
 	if (features_to_draw.size() > 0) { //render specified
 		for (auto & ftd : features_to_draw) {

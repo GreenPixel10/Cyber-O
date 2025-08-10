@@ -6,13 +6,40 @@ LinePoint::LinePoint(std::vector<std::string> p) {
 	pType = p.size() == 3 ? std::stoi(p[2]) : -1;
 }
 
-SplinePoint::SplinePoint(Point p, Point p_h, Point n_h): pos(p), p_handle(p_h), n_handle(n_h){}
+SplinePoint::SplinePoint(Point p, Point p_h, Point n_h):
+	pos(glm::vec2(p.x, p.y)), p_handle(glm::vec2(p_h.x, p_h.y)), n_handle(glm::vec2(n_h.x, n_h.y)) { }
 
 LineFeature::LineFeature() {
 	closed = false;
 	col = ofColor::white;
+	slope_verified = false;
+	slope_leaner = 0;
 }
 
+
+void LineFeature::lean_slope_apply() {
+
+
+#define DRAW_SLOPE_FLIPS true
+
+std::cout << "--> " << slope_leaner << "\n";
+
+	if (slope_leaner == 0) { //not enough info
+		return;
+	}
+
+	//otherwise, slope determined!
+	set_slope_verified(true);
+	col = ofColor::green;
+
+	//if the contour was not correct...
+	if (slope_leaner < 0) {
+		reverse_slope(); //flip it
+		if (DRAW_SLOPE_FLIPS) {col = ofColor::red;}
+	}
+
+	slope_leaner = 0; //reset leaner (probably unneeded)
+}
 
 void LineFeature::construct_splines() {
 
@@ -59,7 +86,7 @@ void LineFeature::construct_splines() {
 				{
 					Point p_last = full_points[next_index - 1]; //get p_handle of end point
 					full_points[0] = p_last; //stick it to the beginning
-					//DON'T increment point counter (start point gets duplicated later)
+					//DON'T increment point counter (closed loop flag gets set isntead)
 					closed = true;
 					break;
 				}
@@ -73,19 +100,31 @@ void LineFeature::construct_splines() {
 
 		}
 
+
+
 		
 	}
 
 	max_coords = Point { INT_MIN, INT_MIN, false };
 	min_coords = Point { INT_MAX, INT_MAX, false };
 
+	//construct final spline point list
 	for (int m = 0; m < num_points; m++) {
 		int index = (m * 3) + 1;
 		spline_points.push_back(SplinePoint(full_points[index], full_points[index - 1], full_points[index + 1]));
+
+		//garbage bro
 		if (full_points[index].x > max_coords.x) {max_coords.x = full_points[index].x;}
 		if (full_points[index].y > max_coords.y) {max_coords.y = full_points[index].y;}
 		if (full_points[index].x < min_coords.x) {min_coords.x = full_points[index].x;}
 		if (full_points[index].y < min_coords.y) {min_coords.y = full_points[index].y;}
+	}
+
+	//auto close loops that don't quite meet
+	#define close_threshold 20 //metres
+	float d = glm::distance(spline_points.front().pos, spline_points.back().pos);
+	if (d < close_threshold * 100) {
+		closed = true;
 	}
 
 
@@ -101,9 +140,14 @@ void LineFeature::construct_polyline() {
 	line.setClosed(closed);
 }
 
+void LineFeature::reverse_slope() {
+	std::reverse(spline_points.begin(), spline_points.end());
+	construct_polyline();
+}
+
 
 void LineFeature::draw() {
-
+	
 	ofSetColor(col);
 	line.draw();
 }

@@ -25,9 +25,9 @@ class LinePoint {
 class SplinePoint {
 	public:
 		SplinePoint(Point p, Point p_h, Point n_h);
-		Point pos;
-		Point p_handle;
-		Point n_handle;
+		glm::vec2 pos;
+		glm::vec2 p_handle;
+		glm::vec2 n_handle;
 
 
 };
@@ -41,8 +41,16 @@ class LineFeature : public Feature {
 		inline ofPolyline get_line() { return line;}
 		inline bool get_closed() { return closed;}
 
+		inline bool get_slope_verified() { return slope_verified; }
+		inline void set_slope_verified(bool is_slope_verified) { slope_verified = is_slope_verified; }
+		inline void lean_slope_correct() {slope_leaner++;}
+		inline void lean_slope_wrong() { slope_leaner--; }
+		void lean_slope_apply();
+
+
 		void construct_splines();
 		void construct_polyline();
+		void reverse_slope();
 		void draw();
 
 		
@@ -56,6 +64,9 @@ class LineFeature : public Feature {
 		bool closed;
 
 		ofPolyline line; //draw line
+
+		bool slope_verified;
+		int slope_leaner; //negative means probably WRONG, positive means probably RIGHT
 
 
 };

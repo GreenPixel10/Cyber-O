@@ -17,8 +17,8 @@ SymbolManager::SymbolManager() {
 
 	//should read from file
 	symbol_names[S_UNKNOWN] = { "Unknown", };
-	symbol_names[S_CONTOUR] = { "Contour" };
-	symbol_names[S_INDEX_CONTOUR] = { "Index contour", "Index Contour" };
+	symbol_names[S_CONTOUR] = { "Contour", "Index contour", "Index Contour" };
+	//symbol_names[S_INDEX_CONTOUR] = { "Index contour", "Index Contour" };
 	symbol_names[S_CLIFF] = { "Cliff", "Cliff, with tags", "Passable rock face" };
 	symbol_names[S_MIN_CLIFF] = { "Cliff (Minimum)", "Cliff, with tags, minimum size", "Passable rock face, minimum size" };
 	symbol_names[S_SLOPE_TAG] = { "Slope line, contour", "Slope Line for Contour" };
