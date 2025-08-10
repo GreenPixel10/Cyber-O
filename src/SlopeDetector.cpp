@@ -11,6 +11,75 @@ void SlopeDetector::detect_slope() {
 	std::cout << get_percent_verified() << "% of contours verified\n";
 }
 
+void SlopeDetector::repair_contours() {
+	for (auto cA : (*features)[S_CONTOUR]) {
+		LineFeature * contourA = dynamic_cast<LineFeature *>(cA);
+		ofPolyline Aline = contourA->get_line();
+		int A_end_index = Aline.size() - 1;
+
+		glm::vec2 cA_s = Aline.getPointAtIndexInterpolated(0);
+		glm::vec2 cA_s2 = Aline.getPointAtIndexInterpolated(1);
+		glm::vec2 CA_svec = glm::normalize(cA_s - cA_s2);
+
+		glm::vec2 cA_e = Aline.getPointAtIndexInterpolated(A_end_index);
+		glm::vec2 cA_e2 = Aline.getPointAtIndexInterpolated(A_end_index-1);
+		glm::vec2 CA_evec = glm::normalize(cA_e - cA_e2);
+
+
+
+		for (auto cB : (*features)[S_CONTOUR]) {
+			if (cB == cA) { continue;}
+			LineFeature * contourB = dynamic_cast<LineFeature *>(cB);
+			ofPolyline Bline = contourB->get_line();
+			int B_end_index = Bline.size() - 1;
+			glm::vec2 cB_s = Bline.getPointAtIndexInterpolated(0);
+			glm::vec2 cB_s2 = Bline.getPointAtIndexInterpolated(1);
+			glm::vec2 CA_svec = glm::normalize(cA_s - cA_s2);
+
+			glm::vec2 cB_e = Bline.getPointAtIndexInterpolated(B_end_index);
+			glm::vec2 cB_e2 = Bline.getPointAtIndexInterpolated(B_end_index-1);
+			glm::vec2 CA_svec = glm::normalize(cA_s - cA_s2);
+
+			//for each of the possible 4 connections
+			//check if they're close
+
+			glm::vec2 prev_middle_o1 = (cA_s + cB_s)/2;
+			int prev_middle_o1_dist = glm::distance(prev_middle_o1, cA_s);
+
+			glm::vec2 prev_middle_o2 = (cA_s + cB_e)/2;
+			int prev_middle_o2_dist = glm::distance(prev_middle_o2, cA_s);
+
+			glm::vec2 next_middle_o1 = (cA_e + cB_s)/2;
+			int next_middle_o1_dist = glm::distance(next_middle_o1, cA_e);
+
+			glm::vec2 next_middle_o2 = (cA_e + cB_e)/2;
+			int next_middle_o2_dist = glm::distance(next_middle_o2, cA_e);
+
+			#define CONTOUR_GAP_CLOSE 20 //metres
+
+			if (prev_middle_o1_dist < CONTOUR_GAP_CLOSE * 100 / 2) {
+				
+			}
+			
+			if (prev_middle_o2_dist < CONTOUR_GAP_CLOSE * 100 / 2) {
+
+			}
+			
+			if (next_middle_o1_dist < CONTOUR_GAP_CLOSE * 100 / 2) {
+
+			}
+			
+			if (next_middle_o2_dist < CONTOUR_GAP_CLOSE * 100 / 2) {
+
+			}
+
+
+
+		}
+	}
+		
+}
+
 
 void SlopeDetector::slope_from_directional_points(){
 

@@ -15,6 +15,8 @@ LineFeature::LineFeature() {
 	col = ofColor::white;
 	slope_verified = false;
 	slope_leaner = 0;
+	link_next = {};
+	link_prev = {};
 }
 
 void LineFeature::init() {

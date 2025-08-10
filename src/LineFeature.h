@@ -52,6 +52,11 @@ class LineFeature : public Feature {
 		int get_length_at_point(glm::vec2 point);
 		inline int get_length_at_point(glm::vec3 point) {return get_length_at_point(glm::vec2(point.x, point.y));};
 
+		inline void add_link_prev(LineFeature * lf) { link_prev.push_back(lf);}
+		inline void add_link_next(LineFeature * lf) { link_next.push_back(lf);}
+		inline std::vector<LineFeature*> get_link_prev() { return link_prev;}
+		inline std::vector<LineFeature *> get_link_next() { return link_next; }
+
 		void construct_splines();
 		void construct_polyline();
 		void reverse_slope();
@@ -73,6 +78,9 @@ class LineFeature : public Feature {
 
 		bool slope_verified;
 		int slope_leaner; //negative means probably WRONG, positive means probably RIGHT
+
+		std::vector<LineFeature *> link_next;
+		std::vector<LineFeature *> link_prev;
 
 
 };
