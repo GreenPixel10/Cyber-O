@@ -36,17 +36,20 @@ void LineFeature::align_linked() {
 
 
 	set_linked_flag(true);
-	
 
 	for (auto &n : link_next) {
+		std::cout << (n.second ? "ok\n" : "nah\n");
 		if (n.first && n.first != this && n.second == true) {
+			std::cout << "aligning NEXT\n";
 			n.first->reverse_slope(this, this, n.second);
 			n.second = false;
 		}
 	}
 
 	for (auto & n : link_prev) {
+		std::cout << (n.second ? "ok\n" : "nah\n");
 		if (n.first && n.first != this && n.second == true) {
+			std::cout << "aligning PREV\n";
 			n.first->reverse_slope(this, this, n.second);
 			n.second = false;
 		}

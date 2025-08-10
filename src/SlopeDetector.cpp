@@ -68,55 +68,79 @@ void SlopeDetector::repair_contours() {
 			//for each of the possible 4 connections
 			//check if they're close
 
+
+			//distances between points
 			int ss_dist = glm::distance(cA_s, cB_s);
-			int ss_dist_extended = glm::distance(cA_s + (cA_svec * 10), cB_s + (cB_svec * 10));
-
 			int se_dist = glm::distance(cA_s, cB_e);
-			int se_dist_extended = glm::distance(cA_s + (cA_svec * 10), cB_e + (cB_evec * 10));
-
 			int es_dist = glm::distance(cA_e, cB_s);
-			int es_dist_extended = glm::distance(cA_e + (cA_evec * 10), cB_s + (cB_svec * 10));
-
 			int ee_dist = glm::distance(cA_e, cB_e);
-			int ee_dist_extended = glm::distance(cA_e + (cA_evec * 10), cB_e + (cB_evec * 10));
+
+			#define _START 1
+			#define _END 0
 
 
+			int A_side = (std::min(ss_dist, se_dist) < std::min(es_dist, ee_dist)) ? _START : _END;
+			int B_side;
 
-			#define CONTOUR_GAP_CLOSE 30 //metres
+			if (A_side == _START) {B_side = (ss_dist < se_dist)?_START:_END; }
+			if (A_side == _END) {B_side = (es_dist < ee_dist)?_START:_END; }
 
-			#define CONTOUR_GAP_ANGLE_THRESHOLD -0.5f
+			//std::cout << A_side << " " << B_side << "\n";
 
-			if (ss_dist < CONTOUR_GAP_CLOSE * 100 && ss_dist_extended < ss_dist) { //s,s 
-				float dot = glm::dot(cA_svec, cB_svec);
-				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
-					contourA->add_link_prev({contourB,true});
-					contourA->set_colour(ofColor::green);
+			bool aligned = !(A_side == B_side); //if both a and b are the same end, they aren't aligned
+
+			//get endpoints
+			glm::vec2 P = A_side == _START? cA_s : cA_e;
+			glm::vec2 Q = B_side == _START? cB_s : cB_e;
+
+			
+			int dist = glm::distance(P, Q);
+
+			//skip if too far apart
+			#define CONTOUR_GAP_CLOSE 50 //metres
+			if (dist > CONTOUR_GAP_CLOSE * 100) {
+				continue;
+			}
+
+			//get rough endpoint extension vectors
+			glm::vec2 Pv = A_side == _START ? cA_svec : cA_evec;
+			glm::vec2 Qv = B_side == _START ? cB_svec : cB_evec;
+
+
+			glm::vec2 Pex = P + (Pv * (dist / 2));
+			glm::vec2 Qex = Q + (Qv * (dist / 2));
+
+			#define CONTOUR_ANGLE_THRESHOLD -0.4f //
+			float dot = glm::dot(Pv, Qv);
+			if (dot > CONTOUR_ANGLE_THRESHOLD) { continue;}
+
+
+			glm::vec2 ideal_midpoint = (Q + P) / 2;
+
+
+			int variance = std::max(glm::distance(Pex, ideal_midpoint), glm::distance(Qex, ideal_midpoint));
+			//std::cout << "variance " << (float)variance / 100 << "\n";
+
+			
+
+			#define CONTOUR_GAP_VARIANCE_THRESHOLD 10 //metres
+
+			if (variance < CONTOUR_GAP_VARIANCE_THRESHOLD * 100) {
+				
+				if (A_side == _START) {
+					contourA->add_link_prev({ contourB, !aligned });
+					std::cout << "linking!\n";
 				}
+				if (A_side == _END) {
+					contourA->add_link_next({ contourB, !aligned });
+					std::cout << "linking!\n";
+				}
+					
+				contourA->set_colour(ofColor::green);
+
 			}
 			
-			if (se_dist < CONTOUR_GAP_CLOSE * 100 && se_dist_extended < se_dist) { //s,e
-				float dot = glm::dot(cA_svec, cB_evec);
-				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
-					contourA->add_link_prev({contourB, false});
-					contourA->set_colour(ofColor::green);
-				}
-			}
-			
-			if (es_dist < CONTOUR_GAP_CLOSE * 100 && es_dist_extended < es_dist) { //e,s
-				float dot = glm::dot(cA_evec, cB_svec);
-				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
-					contourA->add_link_next({contourB, false});
-					contourA->set_colour(ofColor::green);
-				}
-			}
-			
-			if (ee_dist < CONTOUR_GAP_CLOSE * 100 && ee_dist_extended < ee_dist) { //e,e
-				float dot = glm::dot(cA_evec, cB_evec);
-				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
-					contourA->add_link_next({contourB, true});
-					contourA->set_colour(ofColor::green);
-				}
-			}
+
 
 
 
