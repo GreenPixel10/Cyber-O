@@ -3,6 +3,9 @@
 SlopeDetector::SlopeDetector() { }
 
 void SlopeDetector::detect_slope() {
+
+	repair_contours();
+	return;
 	slope_from_directional_points();
 	apply_contour_leaners();
 	slope_from_directional_linears();
@@ -19,11 +22,11 @@ void SlopeDetector::repair_contours() {
 
 		glm::vec2 cA_s = Aline.getPointAtIndexInterpolated(0);
 		glm::vec2 cA_s2 = Aline.getPointAtIndexInterpolated(1);
-		glm::vec2 CA_svec = glm::normalize(cA_s - cA_s2);
+		glm::vec2 cA_svec = glm::normalize(cA_s - cA_s2);
 
 		glm::vec2 cA_e = Aline.getPointAtIndexInterpolated(A_end_index);
 		glm::vec2 cA_e2 = Aline.getPointAtIndexInterpolated(A_end_index-1);
-		glm::vec2 CA_evec = glm::normalize(cA_e - cA_e2);
+		glm::vec2 cA_evec = glm::normalize(cA_e - cA_e2);
 
 
 
@@ -34,43 +37,54 @@ void SlopeDetector::repair_contours() {
 			int B_end_index = Bline.size() - 1;
 			glm::vec2 cB_s = Bline.getPointAtIndexInterpolated(0);
 			glm::vec2 cB_s2 = Bline.getPointAtIndexInterpolated(1);
-			glm::vec2 CA_svec = glm::normalize(cA_s - cA_s2);
+			glm::vec2 cB_svec = glm::normalize(cB_s - cB_s2);
 
 			glm::vec2 cB_e = Bline.getPointAtIndexInterpolated(B_end_index);
 			glm::vec2 cB_e2 = Bline.getPointAtIndexInterpolated(B_end_index-1);
-			glm::vec2 CA_svec = glm::normalize(cA_s - cA_s2);
+			glm::vec2 cB_evec = glm::normalize(cB_e - cB_e2);
 
 			//for each of the possible 4 connections
 			//check if they're close
 
-			glm::vec2 prev_middle_o1 = (cA_s + cB_s)/2;
-			int prev_middle_o1_dist = glm::distance(prev_middle_o1, cA_s);
-
-			glm::vec2 prev_middle_o2 = (cA_s + cB_e)/2;
-			int prev_middle_o2_dist = glm::distance(prev_middle_o2, cA_s);
-
-			glm::vec2 next_middle_o1 = (cA_e + cB_s)/2;
-			int next_middle_o1_dist = glm::distance(next_middle_o1, cA_e);
-
-			glm::vec2 next_middle_o2 = (cA_e + cB_e)/2;
-			int next_middle_o2_dist = glm::distance(next_middle_o2, cA_e);
+			int prev_middle_o1_dist = glm::distance(cA_s, cB_s);
+			int prev_middle_o2_dist = glm::distance(cA_s, cB_e);
+			int next_middle_o1_dist = glm::distance(cA_e, cB_s);
+			int next_middle_o2_dist = glm::distance(cA_e, cB_e);
 
 			#define CONTOUR_GAP_CLOSE 20 //metres
 
-			if (prev_middle_o1_dist < CONTOUR_GAP_CLOSE * 100 / 2) {
-				
+			#define CONTOUR_GAP_ANGLE_THRESHOLD -0.2f
+
+			if (prev_middle_o1_dist < CONTOUR_GAP_CLOSE * 100) { //s,s
+				float dot = glm::dot(cA_svec, cB_svec);
+				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
+					contourA->add_link_prev(contourB);
+					contourA->set_colour(ofColor::green);
+				}
 			}
 			
-			if (prev_middle_o2_dist < CONTOUR_GAP_CLOSE * 100 / 2) {
-
+			if (prev_middle_o2_dist < CONTOUR_GAP_CLOSE * 100) { //s,e
+				float dot = glm::dot(cA_svec, cB_evec);
+				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
+					contourA->add_link_prev(contourB);
+					contourA->set_colour(ofColor::green);
+				}
 			}
 			
-			if (next_middle_o1_dist < CONTOUR_GAP_CLOSE * 100 / 2) {
-
+			if (next_middle_o1_dist < CONTOUR_GAP_CLOSE * 100) { //e,s
+				float dot = glm::dot(cA_evec, cB_svec);
+				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
+					contourA->add_link_next(contourB);
+					contourA->set_colour(ofColor::green);
+				}
 			}
 			
-			if (next_middle_o2_dist < CONTOUR_GAP_CLOSE * 100 / 2) {
-
+			if (next_middle_o2_dist < CONTOUR_GAP_CLOSE * 100) { //e,e
+				float dot = glm::dot(cA_evec, cB_evec);
+				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
+					contourA->add_link_next(contourB);
+					contourA->set_colour(ofColor::green);
+				}
 			}
 
 

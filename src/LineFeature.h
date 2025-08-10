@@ -42,6 +42,9 @@ class LineFeature : public Feature {
 		inline void add_point(LinePoint p) { points.push_back(p); }
 		inline ofPolyline get_line() { return line;}
 		inline bool get_closed() { return closed;}
+		bool get_closed_via_linked();
+
+		void align_linked();
 
 		inline bool get_slope_verified() { return slope_verified; }
 		inline void set_slope_verified(bool is_slope_verified) { slope_verified = is_slope_verified; }

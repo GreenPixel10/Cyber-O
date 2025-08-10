@@ -23,6 +23,16 @@ void LineFeature::init() {
 	construct_splines();
 }
 
+bool LineFeature::get_closed_via_linked() {
+	//LineFeature* next = link_next; 
+	//while (true) {
+		
+	//}
+}
+
+void LineFeature::align_linked() {
+	
+}
 
 void LineFeature::lean_slope_apply() {
 
@@ -151,7 +161,7 @@ void LineFeature::construct_splines() {
 		if (full_points[index].y < min_coords.y) {min_coords.y = full_points[index].y;}
 	}
 
-	//auto close contours that don't quite meet
+	//auto close looped contours that don't quite meet
 	if (S_CODE == S_CONTOUR) {
 		#define CLOSE_THRESHOLD 20 //metres
 		float d = glm::distance(spline_points.front().pos, spline_points.back().pos);
