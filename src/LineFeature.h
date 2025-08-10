@@ -44,7 +44,8 @@ class LineFeature : public Feature {
 		inline bool get_closed() { return closed;}
 		bool get_closed_via_linked();
 
-		void align_linked(LineFeature* origin);
+		void align_linked();
+		inline void set_linked_flag(bool set) { linked_flag = set;}
 
 		inline bool get_slope_verified() { return slope_verified; }
 		inline void set_slope_verified(bool is_slope_verified) { slope_verified = is_slope_verified; }
@@ -62,11 +63,11 @@ class LineFeature : public Feature {
 
 		void construct_splines();
 		void construct_polyline();
-		void reverse_slope(LineFeature * origin, LineFeature * last, bool bad_connect);
+		void reverse_slope(LineFeature * origin, LineFeature * last, int lazy_depth = 0);
 		void draw();
 
 		
-
+		
 		
 		Point min_coords;
 		Point max_coords;
@@ -84,6 +85,8 @@ class LineFeature : public Feature {
 
 		std::vector<std::pair<LineFeature *, bool>> link_next;
 		std::vector<std::pair<LineFeature *, bool>> link_prev;
+		bool linked_flag;
+
 
 
 };

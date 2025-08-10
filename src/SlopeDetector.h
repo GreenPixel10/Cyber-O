@@ -30,6 +30,10 @@ class SlopeDetector {
 
 		int get_percent_verified();
 
+
+		void reset_contour_link_flags();
+
+
 	private:
 		std::map<int, std::vector<Feature *>>* features; 
 };

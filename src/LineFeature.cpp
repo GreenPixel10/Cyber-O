@@ -17,6 +17,7 @@ LineFeature::LineFeature() {
 	slope_leaner = 0;
 	link_next = {};
 	link_prev = {};
+	linked_flag = false;
 }
 
 void LineFeature::init() {
@@ -31,21 +32,22 @@ bool LineFeature::get_closed_via_linked() {
 	return false;
 }
 
-void LineFeature::align_linked(LineFeature * origin) {
-	std::cout << "\nSTARTING LINK CHAIN\n";
-	for (auto &n : link_next) {
-		if (n.first && n.first != origin && n.second == true) {
-			std::cout << "found the next contour\n";
-			n.first->reverse_slope(origin, origin, n.second);
-			n.second = false;
+void LineFeature::align_linked() {
 
+
+	set_linked_flag(true);
+	
+
+	for (auto &n : link_next) {
+		if (n.first && n.first != this && n.second == true) {
+			n.first->reverse_slope(this, this, n.second);
+			n.second = false;
 		}
 	}
 
 	for (auto & n : link_prev) {
-		if (n.first && n.first != origin && n.second == true) {
-			std::cout << "found the previous contour\n";
-			n.first->reverse_slope(origin, origin, n.second);
+		if (n.first && n.first != this && n.second == true) {
+			n.first->reverse_slope(this, this, n.second);
 			n.second = false;
 		}
 	}
@@ -68,7 +70,7 @@ void LineFeature::lean_slope_apply() {
 
 	//if the contour was not correct...
 	if (slope_leaner < 0) {
-		reverse_slope(this, nullptr, false); //flip it
+		reverse_slope(this, nullptr, false); //flip it and all linked contours
 		if (DRAW_SLOPE_FLIPS) {col = ofColor::blue;}
 	}
 
@@ -202,7 +204,9 @@ void LineFeature::construct_polyline() {
 	line.setClosed(closed);
 }
 
-void LineFeature::reverse_slope(LineFeature* origin, LineFeature* last, bool bad_connect) {
+void LineFeature::reverse_slope(LineFeature* origin, LineFeature* last, int lazy_depth) {
+
+	set_linked_flag(true);
 
 	//if this contour was stepped to by a previous linked contour,
 	//find and mark that connection as corrected
@@ -224,14 +228,19 @@ void LineFeature::reverse_slope(LineFeature* origin, LineFeature* last, bool bad
 	}
 
 
+
 	std::reverse(spline_points.begin(), spline_points.end());
 	construct_polyline();
+
+	if (lazy_depth > 50) {
+		return;
+	}
 
 
 	if (!in_next) {
 		for (auto n : link_prev) {
-			if (n.first && n.first != origin && n.first != last) {
-				n.first->reverse_slope(origin, this, n.second);
+			if (n.first && !n.first->linked_flag) {
+				n.first->reverse_slope(origin, this, lazy_depth + 1);
 			}
 		}
 	}
@@ -239,8 +248,8 @@ void LineFeature::reverse_slope(LineFeature* origin, LineFeature* last, bool bad
 
 	else {
 		for (auto & n : link_next) {
-			if (n.first && n.first != origin && n.first != last) {
-				n.first->reverse_slope(origin, this, n.second);
+			if (n.first && !n.first->linked_flag) {
+				n.first->reverse_slope(origin, this, lazy_depth + 1);
 			}
 		}
 	}
@@ -259,8 +268,26 @@ void LineFeature::draw() {
 	ofSetLineWidth(get_slope_verified()?2:1);
 	ofSetColor(col);
 	line.draw();
-	ofSetColor(ofColor::green);
-	ofDrawCircle(line[0].x, line[0].y, 300);
-	ofSetColor(ofColor::red);
-	ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, 300);
+
+	#define DRAW_ENDPOINTS true
+	if (DRAW_ENDPOINTS) {
+		ofSetColor(ofColor::green);
+		ofDrawCircle(line[0].x, line[0].y, 300);
+		ofSetColor(ofColor::red);
+		ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, 300);
+	}
+
+	#define DRAW_LINKS false
+	if (DRAW_LINKS) {
+		ofSetColor(ofColor::cyan);
+
+		for (auto& l : link_next) {
+			ofDrawLine(line.getPointAtPercent(0), l.first->get_line().getPointAtPercent(100));
+		}
+		for (auto & l : link_prev) {
+			ofDrawLine(line.getPointAtPercent(100), l.first->get_line().getPointAtPercent(0));
+		}
+		
+	}
+
 }

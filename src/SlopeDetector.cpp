@@ -5,19 +5,35 @@ SlopeDetector::SlopeDetector() { }
 void SlopeDetector::detect_slope() {
 
 	repair_contours();
-	for (auto f : (*features)[S_CONTOUR]) {
+
+
+	for (auto &f : (*features)[S_CONTOUR]) {
 		LineFeature * contour = dynamic_cast<LineFeature *>(f);
-		contour->align_linked(contour);
+		contour->align_linked();
+		reset_contour_link_flags();
 	}
+
+
+
 	return;
 	slope_from_directional_points();
 	apply_contour_leaners();
+	reset_contour_link_flags();
 	slope_from_directional_linears();
 	apply_contour_leaners();
+	reset_contour_link_flags();
 	slope_from_closed_loops();
 	std::cout << get_percent_verified() << "% of contours verified\n";
 
 
+}
+
+
+void SlopeDetector::reset_contour_link_flags() {
+	for (auto & f : (*features)[S_CONTOUR]) {
+		LineFeature * contour = dynamic_cast<LineFeature *>(f);
+		contour->set_linked_flag(false);
+	}
 }
 
 void SlopeDetector::repair_contours() {
@@ -52,16 +68,25 @@ void SlopeDetector::repair_contours() {
 			//for each of the possible 4 connections
 			//check if they're close
 
-			int prev_middle_o1_dist = glm::distance(cA_s, cB_s);
-			int prev_middle_o2_dist = glm::distance(cA_s, cB_e);
-			int next_middle_o1_dist = glm::distance(cA_e, cB_s);
-			int next_middle_o2_dist = glm::distance(cA_e, cB_e);
+			int ss_dist = glm::distance(cA_s, cB_s);
+			int ss_dist_extended = glm::distance(cA_s + (cA_svec * 10), cB_s + (cB_svec * 10));
+
+			int se_dist = glm::distance(cA_s, cB_e);
+			int se_dist_extended = glm::distance(cA_s + (cA_svec * 10), cB_e + (cB_evec * 10));
+
+			int es_dist = glm::distance(cA_e, cB_s);
+			int es_dist_extended = glm::distance(cA_e + (cA_evec * 10), cB_s + (cB_svec * 10));
+
+			int ee_dist = glm::distance(cA_e, cB_e);
+			int ee_dist_extended = glm::distance(cA_e + (cA_evec * 10), cB_e + (cB_evec * 10));
+
+
 
 			#define CONTOUR_GAP_CLOSE 30 //metres
 
-			#define CONTOUR_GAP_ANGLE_THRESHOLD -0.2f
+			#define CONTOUR_GAP_ANGLE_THRESHOLD -0.5f
 
-			if (prev_middle_o1_dist < CONTOUR_GAP_CLOSE * 100) { //s,s 
+			if (ss_dist < CONTOUR_GAP_CLOSE * 100 && ss_dist_extended < ss_dist) { //s,s 
 				float dot = glm::dot(cA_svec, cB_svec);
 				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
 					contourA->add_link_prev({contourB,true});
@@ -69,7 +94,7 @@ void SlopeDetector::repair_contours() {
 				}
 			}
 			
-			if (prev_middle_o2_dist < CONTOUR_GAP_CLOSE * 100) { //s,e
+			if (se_dist < CONTOUR_GAP_CLOSE * 100 && se_dist_extended < se_dist) { //s,e
 				float dot = glm::dot(cA_svec, cB_evec);
 				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
 					contourA->add_link_prev({contourB, false});
@@ -77,7 +102,7 @@ void SlopeDetector::repair_contours() {
 				}
 			}
 			
-			if (next_middle_o1_dist < CONTOUR_GAP_CLOSE * 100) { //e,s
+			if (es_dist < CONTOUR_GAP_CLOSE * 100 && es_dist_extended < es_dist) { //e,s
 				float dot = glm::dot(cA_evec, cB_svec);
 				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
 					contourA->add_link_next({contourB, false});
@@ -85,7 +110,7 @@ void SlopeDetector::repair_contours() {
 				}
 			}
 			
-			if (next_middle_o2_dist < CONTOUR_GAP_CLOSE * 100) { //e,e
+			if (ee_dist < CONTOUR_GAP_CLOSE * 100 && ee_dist_extended < ee_dist) { //e,e
 				float dot = glm::dot(cA_evec, cB_evec);
 				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
 					contourA->add_link_next({contourB, true});
