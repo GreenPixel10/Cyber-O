@@ -44,7 +44,7 @@ class LineFeature : public Feature {
 		inline bool get_closed() { return closed;}
 		bool get_closed_via_linked();
 
-		void align_linked();
+		void align_linked(LineFeature* origin);
 
 		inline bool get_slope_verified() { return slope_verified; }
 		inline void set_slope_verified(bool is_slope_verified) { slope_verified = is_slope_verified; }
@@ -55,14 +55,14 @@ class LineFeature : public Feature {
 		int get_length_at_point(glm::vec2 point);
 		inline int get_length_at_point(glm::vec3 point) {return get_length_at_point(glm::vec2(point.x, point.y));};
 
-		inline void add_link_prev(LineFeature * lf) { link_prev.push_back(lf);}
-		inline void add_link_next(LineFeature * lf) { link_next.push_back(lf);}
-		inline std::vector<LineFeature*> get_link_prev() { return link_prev;}
-		inline std::vector<LineFeature *> get_link_next() { return link_next; }
+		inline void add_link_prev(std::pair<LineFeature *, bool> lf) { link_prev.push_back(lf); }
+		inline void add_link_next(std::pair<LineFeature *, bool> lf) { link_next.push_back(lf); }
+		inline vector<std::pair<LineFeature *, bool>> get_link_prev() { return link_prev; }
+		inline vector<std::pair<LineFeature *, bool>> get_link_next() { return link_next; }
 
 		void construct_splines();
 		void construct_polyline();
-		void reverse_slope();
+		void reverse_slope(LineFeature * origin, LineFeature * last, bool bad_connect);
 		void draw();
 
 		
@@ -82,8 +82,8 @@ class LineFeature : public Feature {
 		bool slope_verified;
 		int slope_leaner; //negative means probably WRONG, positive means probably RIGHT
 
-		std::vector<LineFeature *> link_next;
-		std::vector<LineFeature *> link_prev;
+		std::vector<std::pair<LineFeature *, bool>> link_next;
+		std::vector<std::pair<LineFeature *, bool>> link_prev;
 
 
 };

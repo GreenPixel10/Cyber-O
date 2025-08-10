@@ -28,10 +28,28 @@ bool LineFeature::get_closed_via_linked() {
 	//while (true) {
 		
 	//}
+	return false;
 }
 
-void LineFeature::align_linked() {
-	
+void LineFeature::align_linked(LineFeature * origin) {
+	std::cout << "\nSTARTING LINK CHAIN\n";
+	for (auto &n : link_next) {
+		if (n.first && n.first != origin && n.second == true) {
+			std::cout << "found the next contour\n";
+			n.first->reverse_slope(origin, origin, n.second);
+			n.second = false;
+
+		}
+	}
+
+	for (auto & n : link_prev) {
+		if (n.first && n.first != origin && n.second == true) {
+			std::cout << "found the previous contour\n";
+			n.first->reverse_slope(origin, origin, n.second);
+			n.second = false;
+		}
+	}
+
 }
 
 void LineFeature::lean_slope_apply() {
@@ -50,7 +68,7 @@ void LineFeature::lean_slope_apply() {
 
 	//if the contour was not correct...
 	if (slope_leaner < 0) {
-		reverse_slope(); //flip it
+		reverse_slope(this, nullptr, false); //flip it
 		if (DRAW_SLOPE_FLIPS) {col = ofColor::blue;}
 	}
 
@@ -184,9 +202,56 @@ void LineFeature::construct_polyline() {
 	line.setClosed(closed);
 }
 
-void LineFeature::reverse_slope() {
+void LineFeature::reverse_slope(LineFeature* origin, LineFeature* last, bool bad_connect) {
+
+	//if this contour was stepped to by a previous linked contour,
+	//find and mark that connection as corrected
+
+	bool in_next = true;
+
+	if (last == origin) {
+		for (auto &n : link_prev) {
+			if (n.first == last) {
+				n.second = false;
+				in_next = false;
+			}
+		}
+		for (auto &n : link_next) {
+			if (n.first == last) {
+				n.second = false;
+			}
+		}
+	}
+
+
 	std::reverse(spline_points.begin(), spline_points.end());
 	construct_polyline();
+
+
+	if (!in_next) {
+		for (auto n : link_prev) {
+			if (n.first && n.first != origin && n.first != last) {
+				n.first->reverse_slope(origin, this, n.second);
+			}
+		}
+	}
+
+
+	else {
+		for (auto & n : link_next) {
+			if (n.first && n.first != origin && n.first != last) {
+				n.first->reverse_slope(origin, this, n.second);
+			}
+		}
+	}
+
+
+
+
+
+
+	
+
 }
 
 
@@ -194,4 +259,8 @@ void LineFeature::draw() {
 	ofSetLineWidth(get_slope_verified()?2:1);
 	ofSetColor(col);
 	line.draw();
+	ofSetColor(ofColor::green);
+	ofDrawCircle(line[0].x, line[0].y, 300);
+	ofSetColor(ofColor::red);
+	ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, 300);
 }

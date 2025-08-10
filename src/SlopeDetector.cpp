@@ -5,6 +5,10 @@ SlopeDetector::SlopeDetector() { }
 void SlopeDetector::detect_slope() {
 
 	repair_contours();
+	for (auto f : (*features)[S_CONTOUR]) {
+		LineFeature * contour = dynamic_cast<LineFeature *>(f);
+		contour->align_linked(contour);
+	}
 	return;
 	slope_from_directional_points();
 	apply_contour_leaners();
@@ -12,6 +16,8 @@ void SlopeDetector::detect_slope() {
 	apply_contour_leaners();
 	slope_from_closed_loops();
 	std::cout << get_percent_verified() << "% of contours verified\n";
+
+
 }
 
 void SlopeDetector::repair_contours() {
@@ -51,14 +57,14 @@ void SlopeDetector::repair_contours() {
 			int next_middle_o1_dist = glm::distance(cA_e, cB_s);
 			int next_middle_o2_dist = glm::distance(cA_e, cB_e);
 
-			#define CONTOUR_GAP_CLOSE 20 //metres
+			#define CONTOUR_GAP_CLOSE 30 //metres
 
 			#define CONTOUR_GAP_ANGLE_THRESHOLD -0.2f
 
-			if (prev_middle_o1_dist < CONTOUR_GAP_CLOSE * 100) { //s,s
+			if (prev_middle_o1_dist < CONTOUR_GAP_CLOSE * 100) { //s,s 
 				float dot = glm::dot(cA_svec, cB_svec);
 				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
-					contourA->add_link_prev(contourB);
+					contourA->add_link_prev({contourB,true});
 					contourA->set_colour(ofColor::green);
 				}
 			}
@@ -66,7 +72,7 @@ void SlopeDetector::repair_contours() {
 			if (prev_middle_o2_dist < CONTOUR_GAP_CLOSE * 100) { //s,e
 				float dot = glm::dot(cA_svec, cB_evec);
 				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
-					contourA->add_link_prev(contourB);
+					contourA->add_link_prev({contourB, false});
 					contourA->set_colour(ofColor::green);
 				}
 			}
@@ -74,7 +80,7 @@ void SlopeDetector::repair_contours() {
 			if (next_middle_o1_dist < CONTOUR_GAP_CLOSE * 100) { //e,s
 				float dot = glm::dot(cA_evec, cB_svec);
 				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
-					contourA->add_link_next(contourB);
+					contourA->add_link_next({contourB, false});
 					contourA->set_colour(ofColor::green);
 				}
 			}
@@ -82,7 +88,7 @@ void SlopeDetector::repair_contours() {
 			if (next_middle_o2_dist < CONTOUR_GAP_CLOSE * 100) { //e,e
 				float dot = glm::dot(cA_evec, cB_evec);
 				if (dot < CONTOUR_GAP_ANGLE_THRESHOLD) {
-					contourA->add_link_next(contourB);
+					contourA->add_link_next({contourB, true});
 					contourA->set_colour(ofColor::green);
 				}
 			}
