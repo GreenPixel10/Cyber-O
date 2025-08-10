@@ -17,6 +17,7 @@
 #define S_SLOPE_TAG 1004
 #define S_IMPASSABLE_CLIFF 1005
 #define S_IMPASSABLE_MIN_CLIFF 1006
+#define S_EARTH_BANK 1007
 
 //symbol categories
 #define SC_UNKNOWN -1

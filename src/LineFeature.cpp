@@ -1,5 +1,6 @@
 
 #include "LineFeature.h"
+#include "SymbolManager.h"
 
 LinePoint::LinePoint(std::vector<std::string> p) {
 	pos = { std::stoi(p[0]), std::stoi(p[1]), false };
@@ -16,13 +17,16 @@ LineFeature::LineFeature() {
 	slope_leaner = 0;
 }
 
+void LineFeature::init() {
+	construct_splines();
+}
+
 
 void LineFeature::lean_slope_apply() {
 
 
 #define DRAW_SLOPE_FLIPS true
 
-std::cout << "--> " << slope_leaner << "\n";
 
 	if (slope_leaner == 0) { //not enough info
 		return;
@@ -35,10 +39,35 @@ std::cout << "--> " << slope_leaner << "\n";
 	//if the contour was not correct...
 	if (slope_leaner < 0) {
 		reverse_slope(); //flip it
-		if (DRAW_SLOPE_FLIPS) {col = ofColor::red;}
+		if (DRAW_SLOPE_FLIPS) {col = ofColor::blue;}
 	}
 
 	slope_leaner = 0; //reset leaner (probably unneeded)
+}
+
+int LineFeature::get_length_at_point(glm::vec2 point) {
+	auto vertices = line.getVertices();
+	if(closed){vertices.push_back(vertices[0]);}
+
+	int walk_total = 0;
+
+	for (int i = 0; i < vertices.size() - 1; i++) {
+		glm::vec2 A = vertices[i];
+		glm::vec2 B = vertices[i+1];
+		glm::vec2 vec = B-A;
+		float len = glm::distance(A,B);
+		for (int j = 0; j < len; j += 100) {
+			double p = j/len;
+			glm::vec2 checkpoint = A + (p*vec);
+			float dist = glm::distance(checkpoint, point);
+			if (dist < 100) {
+				return walk_total + j;
+			}
+		}
+		walk_total += len;
+	}
+
+	return -1;
 }
 
 void LineFeature::construct_splines() {
@@ -120,12 +149,15 @@ void LineFeature::construct_splines() {
 		if (full_points[index].y < min_coords.y) {min_coords.y = full_points[index].y;}
 	}
 
-	//auto close loops that don't quite meet
-	#define close_threshold 20 //metres
-	float d = glm::distance(spline_points.front().pos, spline_points.back().pos);
-	if (d < close_threshold * 100) {
-		closed = true;
+	//auto close contours that don't quite meet
+	if (S_CODE == S_CONTOUR) {
+		#define CLOSE_THRESHOLD 20 //metres
+		float d = glm::distance(spline_points.front().pos, spline_points.back().pos);
+		if (d < CLOSE_THRESHOLD * 100) {
+			closed = true;
+		}
 	}
+
 
 
 }
@@ -147,7 +179,7 @@ void LineFeature::reverse_slope() {
 
 
 void LineFeature::draw() {
-	
+	ofSetLineWidth(get_slope_verified()?2:1);
 	ofSetColor(col);
 	line.draw();
 }

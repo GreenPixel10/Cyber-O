@@ -24,6 +24,7 @@ SymbolManager::SymbolManager() {
 	symbol_names[S_SLOPE_TAG] = { "Slope line, contour", "Slope Line for Contour" };
 	symbol_names[S_IMPASSABLE_CLIFF] = { "Impassable cliff"};
 	symbol_names[S_IMPASSABLE_MIN_CLIFF] = { "Impassable cliff, minimum size"};
+	symbol_names[S_EARTH_BANK] = { "Earth bank" };
 
 
 

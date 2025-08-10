@@ -7,6 +7,10 @@ PointFeature::PointFeature(glm::vec2 pos_, float rot_)
 	col = ofColor::green;
 }
 
+void PointFeature::init() {
+	//
+}
+
 void PointFeature::construct_point() {
 	symbol = glm::vec3();
 	symbol.x = pos.x;

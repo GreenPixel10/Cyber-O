@@ -37,6 +37,8 @@ class LineFeature : public Feature {
 	public:
 		LineFeature();
 
+		void init() override;
+
 		inline void add_point(LinePoint p) { points.push_back(p); }
 		inline ofPolyline get_line() { return line;}
 		inline bool get_closed() { return closed;}
@@ -47,11 +49,15 @@ class LineFeature : public Feature {
 		inline void lean_slope_wrong() { slope_leaner--; }
 		void lean_slope_apply();
 
+		int get_length_at_point(glm::vec2 point);
+		inline int get_length_at_point(glm::vec3 point) {return get_length_at_point(glm::vec2(point.x, point.y));};
 
 		void construct_splines();
 		void construct_polyline();
 		void reverse_slope();
 		void draw();
+
+		
 
 		
 		Point min_coords;

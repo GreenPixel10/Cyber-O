@@ -9,8 +9,8 @@ void ofApp::setup() {
 
 
 	//load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
-	//load_map("D:/Projects/OrienteeringSim/ark.omap");
-	load_map("D:/Projects/OrienteeringSim/test2.omap");
+	load_map("D:/Projects/OrienteeringSim/ark.omap");
+	//load_map("D:/Projects/OrienteeringSim/test2.omap");
 	//load_map("D:/Projects/OrienteeringSim/forest.omap");
 
 
@@ -82,6 +82,8 @@ void ofApp::load_features() {
 			f->set_S_CODE(S_CODE);
 			f->set_colour(sm.symbol_colours[S_CODE]);
 			features[S_CODE].push_back(f); //eg. add to S_CLIFF list
+
+			f->init();
 	
 			
 
@@ -106,7 +108,7 @@ Feature* ofApp::load_line_feature(ofXml obj) {
 	for (auto & p : test) {
 		line_features.back()->add_point(LinePoint(p));
 	}
-	line_features.back()->construct_splines();
+
 
 	return line_features.back();
 }
@@ -255,11 +257,15 @@ void ofApp::draw(){
 		//t->draw();
 	}
 
+#define DRAW_MODE_ALL 0
+#define DRAW_MODE_ALL_KNOWN 1
+#define DRAW_MODE_SPECIFIED 2
 
-	//std::vector<int> features_to_draw = {S_CONTOUR, S_MIN_CLIFF};
-	std::vector<int> features_to_draw = {};
+	int draw_mode = DRAW_MODE_ALL_KNOWN;
 
-	if (features_to_draw.size() > 0) { //render specified
+	std::vector<int> features_to_draw = {S_CONTOUR, S_MIN_CLIFF};
+
+	if (draw_mode == DRAW_MODE_SPECIFIED) { //render specified
 		for (auto & ftd : features_to_draw) {
 			for (Feature * f : features[ftd]) {
 				f->draw();
@@ -267,8 +273,9 @@ void ofApp::draw(){
 		}
 	}
 
-	else { //render all
+	else {
 		for (auto & ftd : sm.symbol_names) {
+			if (DRAW_MODE_ALL_KNOWN && ftd.first == S_UNKNOWN) { continue;}
 			for (Feature * f : features[ftd.first]) {
 				f->draw();
 			}
