@@ -12,7 +12,7 @@ SplinePoint::SplinePoint(Point p, Point p_h, Point n_h):
 
 LineFeature::LineFeature() {
 	closed = false;
-	col = ofColor::white;
+	col = ofColor::black;
 	slope_verified = false;
 	slope_leaner = 0;
 	link_next = {};
@@ -37,23 +37,29 @@ void LineFeature::align_linked() {
 
 	set_linked_flag(true);
 
+	//std::cout << "aligning " << debug << "\n";
+
+
 	for (auto &n : link_next) {
-		std::cout << (n.second ? "ok\n" : "nah\n");
-		if (n.first && n.first != this && n.second == true) {
-			std::cout << "aligning NEXT\n";
+		//std::cout << (n.second == true) << (n.first->linked_flag == false) << "\n";
+		if (n.first && n.first != this && n.second == true && n.first && !n.first->linked_flag) {
 			n.first->reverse_slope(this, this, n.second);
 			n.second = false;
+			//std::cout << debug << "is now aligned with " << n.first->get_debug() << "\n";
+		}
+	}
+	///does not get backt o it!
+	for (auto & n : link_prev) {
+		//std::cout << (n.second == true) << (n.first->linked_flag == false) << "\n";
+		if (n.first && n.first != this && n.second == true && !n.first->linked_flag) {
+			n.first->reverse_slope(this, this, n.second);
+			n.second = false;
+			//std::cout << debug << "is now aligned with " << n.first->get_debug() << "\n";
+
 		}
 	}
 
-	for (auto & n : link_prev) {
-		std::cout << (n.second ? "ok\n" : "nah\n");
-		if (n.first && n.first != this && n.second == true) {
-			std::cout << "aligning PREV\n";
-			n.first->reverse_slope(this, this, n.second);
-			n.second = false;
-		}
-	}
+	//std::cout << "-----------------\n";
 
 }
 
@@ -209,38 +215,57 @@ void LineFeature::construct_polyline() {
 
 void LineFeature::reverse_slope(LineFeature* origin, LineFeature* last, int lazy_depth) {
 
-	set_linked_flag(true);
+	
+	//debug stuff
+	std::string gap = "";
+	for(int i = 0; i <= lazy_depth; i++) {
+		gap += "   ";
+	}
+	//std::cout << gap << debug << "\n";
 
-	//if this contour was stepped to by a previous linked contour,
-	//find and mark that connection as corrected
 
-	bool in_next = true;
-
-	if (last == origin) {
+		bool towards_next = false;
+		//which end to move towards
 		for (auto &n : link_prev) {
 			if (n.first == last) {
-				n.second = false;
-				in_next = false;
+				towards_next = true;
 			}
 		}
-		for (auto &n : link_next) {
-			if (n.first == last) {
-				n.second = false;
+
+		for (auto & n : link_prev) { //DUP
+			
+			if (n.first == origin) {
+				n.second = !n.second;
+				//std::cout << "inverting backlink ---";
+				n.first->flip_link_to(this);
+		
 			}
 		}
-	}
 
+		for (auto & n : link_next) { 
 
+			if (n.first == origin) {
+				n.second = !n.second;
+				//std::cout << "inverting backlink ---";
+				n.first->flip_link_to(this);
+			}
+		}
+
+	
+
+	set_linked_flag(true);
 
 	std::reverse(spline_points.begin(), spline_points.end());
 	construct_polyline();
+	//std::cout << gap << "reversing " << debug << "\n";
 
 	if (lazy_depth > 50) {
+		//std::cout << "RECURSION\n";
 		return;
 	}
 
 
-	if (!in_next) {
+	{
 		for (auto n : link_prev) {
 			if (n.first && !n.first->linked_flag) {
 				n.first->reverse_slope(origin, this, lazy_depth + 1);
@@ -249,7 +274,7 @@ void LineFeature::reverse_slope(LineFeature* origin, LineFeature* last, int lazy
 	}
 
 
-	else {
+	{
 		for (auto & n : link_next) {
 			if (n.first && !n.first->linked_flag) {
 				n.first->reverse_slope(origin, this, lazy_depth + 1);
@@ -271,6 +296,7 @@ void LineFeature::draw() {
 	ofSetLineWidth(get_slope_verified()?2:1);
 	ofSetColor(col);
 	line.draw();
+	//std::cout << col << "\n";
 
 	#define DRAW_ENDPOINTS true
 	if (DRAW_ENDPOINTS) {
@@ -292,5 +318,44 @@ void LineFeature::draw() {
 		}
 		
 	}
+
+}
+
+void LineFeature::flip_link_to(LineFeature * lf) {
+	
+
+	for (auto & n : link_prev) { //DUP
+
+		if (n.first == lf) {
+			n.second = !n.second;
+			//std::cout << "--- inverting backlink\n";
+		}
+	}
+
+	for (auto & n : link_next) {
+
+		if (n.first == lf) {
+			n.second = !n.second;
+			//std::cout << "--- inverting backlink\n";
+		}
+	}
+}
+
+bool LineFeature::is_aligned() {
+	for (auto & n : link_prev) { //DUP
+
+		if (n.second) {
+			return false;
+		}
+	}
+
+	for (auto & n : link_next) {
+
+		if (n.second) {
+			return false;
+		}
+	}
+
+	return true;
 
 }

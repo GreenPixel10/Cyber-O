@@ -72,6 +72,12 @@ class LineFeature : public Feature {
 		Point min_coords;
 		Point max_coords;
 
+		std::vector<std::pair<LineFeature *, bool>> link_next;
+		std::vector<std::pair<LineFeature *, bool>> link_prev;
+		void flip_link_to(LineFeature* lf);
+		bool is_aligned();
+		bool linked_flag;
+
 	private:
 		std::vector<LinePoint> points; //raw data
 		std::vector<SplinePoint> spline_points; //parsed spline data (3 points in each)
@@ -83,9 +89,7 @@ class LineFeature : public Feature {
 		bool slope_verified;
 		int slope_leaner; //negative means probably WRONG, positive means probably RIGHT
 
-		std::vector<std::pair<LineFeature *, bool>> link_next;
-		std::vector<std::pair<LineFeature *, bool>> link_prev;
-		bool linked_flag;
+
 
 
 

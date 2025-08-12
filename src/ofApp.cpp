@@ -9,8 +9,8 @@ void ofApp::setup() {
 
 
 	//load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
-	//load_map("D:/Projects/OrienteeringSim/ark.omap");
-	load_map("D:/Projects/OrienteeringSim/test2.omap");
+	load_map("D:/Projects/OrienteeringSim/ark.omap");
+	//load_map("D:/Projects/OrienteeringSim/test2.omap");
 	//load_map("D:/Projects/OrienteeringSim/forest.omap");
 
 
