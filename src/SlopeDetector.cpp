@@ -1,4 +1,7 @@
 #include "SlopeDetector.h"
+#include <algorithm>
+#include <random>
+
 
 SlopeDetector::SlopeDetector() { }
 
@@ -29,7 +32,13 @@ void SlopeDetector::detect_slope() {
 
 	while(!done) {
 
-		if (runaway >= 50) {
+		auto rng = std::default_random_engine {};
+		std::srand(std::time(0));
+		std::ranges::shuffle((*features)[S_CONTOUR], rng);
+
+		//std::shuffle((*features)[S_CONTOUR].begin(), (*features)[S_CONTOUR].end());
+
+		if (runaway >= 500) {
 			std::cout << "could not resolve linked contours\n";
 			break;
 		}
@@ -61,7 +70,6 @@ void SlopeDetector::detect_slope() {
 
 
 
-	return;
 	slope_from_directional_points();
 	apply_contour_leaners();
 	reset_contour_link_flags();
@@ -181,8 +189,8 @@ void SlopeDetector::repair_contours() {
 					contourA->add_link_next({ contourB, !aligned });
 				}
 
-				//std::cout << "linking " << ((B_side == _START) ? "start" : "end") << " of " << contourA->get_debug() << " with "
-						 // << ((B_side == _START) ? "start" : "end") << " of " << contourB->get_debug() << " \n";
+				std::cout << "linking " << ((B_side == _START) ? "start" : "end") << " of " << contourA->get_debug() << " with "
+						  << ((B_side == _START) ? "start" : "end") << " of " << contourB->get_debug() << " \n";
 
 
 				//contourA->set_colour(ofColor::green);

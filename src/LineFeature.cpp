@@ -265,22 +265,22 @@ void LineFeature::reverse_slope(LineFeature* origin, LineFeature* last, int lazy
 	}
 
 
-	{
+	
 		for (auto n : link_prev) {
 			if (n.first && !n.first->linked_flag) {
 				n.first->reverse_slope(origin, this, lazy_depth + 1);
 			}
 		}
-	}
+	
 
 
-	{
+	
 		for (auto & n : link_next) {
 			if (n.first && !n.first->linked_flag) {
 				n.first->reverse_slope(origin, this, lazy_depth + 1);
 			}
 		}
-	}
+
 
 
 
