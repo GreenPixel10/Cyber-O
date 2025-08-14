@@ -66,8 +66,14 @@ void LineFeature::align_linked() {
 
 }
 
-void LineFeature::set_slope_verified(bool is_slope_verified) {
-	
+void LineFeature::set_slope_verified(bool is_slope_verified, bool recurse) {
+	slope_verified = is_slope_verified;
+	if (recurse) {
+		for (auto & lf : linked_references) {
+			lf->set_slope_verified(true);
+		}
+	}
+
 }
 
 void LineFeature::lean_slope_apply() {
@@ -81,13 +87,12 @@ void LineFeature::lean_slope_apply() {
 	}
 
 	//otherwise, slope determined!
-	set_slope_verified(true);
+	set_slope_verified(true, true);
 	col = ofColor::green;
 
 	//if the contour was not correct...
 	if (slope_leaner < 0) {
 		reverse_all_linked_slopes(); //flip it and all linked contours
-		
 	}
 
 	slope_leaner = 0; //reset leaner (probably unneeded)
@@ -119,6 +124,7 @@ int LineFeature::get_length_at_point(glm::vec2 point) {
 }
 
 void LineFeature::store_all_links() {
+	set_linked_flag(true);
 	linked_references = traverse_link_chain();
 }
 
@@ -324,7 +330,6 @@ void LineFeature::reverse_single_slope() {
 	std::reverse(spline_points.begin(), spline_points.end());
 	construct_polyline();
 	if (DRAW_SLOPE_FLIPS) {col = ofColor::blue;}
-	set_slope_verified(true);
 
 }
 
@@ -363,6 +368,11 @@ void LineFeature::draw() {
 		
 	}
 
+	#define DRAW_TAGS true
+	if (DRAW_LINKS) {
+
+	}
+
 }
 
 void LineFeature::flip_link_to(LineFeature * lf) {
@@ -386,6 +396,7 @@ void LineFeature::flip_link_to(LineFeature * lf) {
 }
 
 bool LineFeature::is_aligned() {
+	
 	for (auto & n : link_prev) { //DUP
 
 		if (n.second) {

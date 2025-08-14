@@ -15,7 +15,8 @@ void SlopeDetector::detect_slope() {
 	//set_debug_colours();
 
 	repair_contours();
-	link_contours();
+	align_contours();
+
 
 	slope_from_directional_points();
 	apply_contour_leaners();
@@ -56,6 +57,9 @@ void SlopeDetector::reset_contour_link_flags() {
 void SlopeDetector::repair_contours() {
 	for (auto cA : (*features)[S_CONTOUR]) {
 		LineFeature * contourA = dynamic_cast<LineFeature *>(cA);
+
+		if (contourA->get_closed()) { continue;}
+
 		ofPolyline Aline = contourA->get_line();
 		int A_end_index = Aline.size() - 1;
 
@@ -72,6 +76,9 @@ void SlopeDetector::repair_contours() {
 		for (auto cB : (*features)[S_CONTOUR]) {
 			if (cB == cA) { continue;}
 			LineFeature * contourB = dynamic_cast<LineFeature *>(cB);
+
+			if (contourB->get_closed()) { continue;}
+
 			ofPolyline Bline = contourB->get_line();
 			int B_end_index = Bline.size() - 1;
 			glm::vec2 cB_s = Bline.getPointAtIndexInterpolated(0);
@@ -169,7 +176,7 @@ void SlopeDetector::repair_contours() {
 		
 }
 
-void SlopeDetector::link_contours() {
+void SlopeDetector::align_contours() {
 
 	int h = 0;
 	int runaway = 1;
@@ -183,7 +190,7 @@ void SlopeDetector::link_contours() {
 
 		std::ranges::shuffle((*features)[S_CONTOUR], rng);
 
-		if (runaway >= 500) {
+		if (runaway >= 125) {
 			std::cout << "could not resolve linked contours\n";
 			break;
 		}
@@ -337,7 +344,7 @@ void SlopeDetector::slope_from_closed_loops() {
 		LineFeature * contour = dynamic_cast<LineFeature *>(c);
 		if (contour->get_slope_verified()) { continue;}
 		if (contour->get_closed()) {
-			contour->set_slope_verified(true);
+			contour->set_slope_verified(true, true); //recursion needed?
 			contour->set_colour(ofColor::purple);
 			}
 		

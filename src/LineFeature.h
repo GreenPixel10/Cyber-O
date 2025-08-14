@@ -48,7 +48,7 @@ class LineFeature : public Feature {
 		inline void set_linked_flag(bool set) { linked_flag = set;}
 
 		inline bool get_slope_verified() { return slope_verified; }
-		void set_slope_verified(bool is_slope_verified);
+		void set_slope_verified(bool is_slope_verified, bool recurse = false);
 		inline void lean_slope_correct() {slope_leaner++;}
 		inline void lean_slope_wrong() { slope_leaner--; }
 		void lean_slope_apply();
