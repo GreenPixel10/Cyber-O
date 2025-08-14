@@ -5,83 +5,46 @@
 
 SlopeDetector::SlopeDetector() { }
 
+
+
 void SlopeDetector::detect_slope() {
 
 
+	
 
-	std::vector<ofColor> cols = {ofColor::yellow, ofColor::orange,ofColor::red,ofColor::purple,ofColor::blue,ofColor::green};
+	//set_debug_colours();
+
+	repair_contours();
+	link_contours();
+
+	slope_from_directional_points();
+	apply_contour_leaners();
+
+	slope_from_directional_linears();
+	apply_contour_leaners();
+
+	slope_from_closed_loops();
+
+	std::cout << get_percent_verified() << "% of contours verified\n";
+
+
+}
+
+
+void SlopeDetector::set_debug_colours() {
+	std::vector<ofColor> cols = { ofColor::yellow, ofColor::orange, ofColor::red, ofColor::purple, ofColor::blue, ofColor::green };
 	std::vector<std::string> colnames = { "yellow", "orange", "red", "purple", "blue", "green" };
 	int numcols = cols.size();
 
 	//std::cout << (*features)[S_CONTOUR].size() << "\n";
 
 	for (int i = 0; i < (*features)[S_CONTOUR].size(); i++) {
-		
+
 		auto f = (*features)[S_CONTOUR][i];
-		f->set_colour(cols[i%numcols]);
-		//std::cout << cols[i] << "\n";
-		f->set_debug(colnames[i%numcols]);
+		f->set_colour(cols[i % numcols]);
+		f->set_debug(colnames[i % numcols]);
 	}
-
-	repair_contours();
-
-	int h = 0;
-	int runaway = 1;
-
-	bool done = false;
-
-	while(!done) {
-
-		auto rng = std::default_random_engine {};
-		std::srand(std::time(0));
-		std::ranges::shuffle((*features)[S_CONTOUR], rng);
-
-		//std::shuffle((*features)[S_CONTOUR].begin(), (*features)[S_CONTOUR].end());
-
-		if (runaway >= 500) {
-			std::cout << "could not resolve linked contours\n";
-			break;
-		}
-
-		for (auto & f : (*features)[S_CONTOUR]) {
-			LineFeature * contour = dynamic_cast<LineFeature *>(f);
-			contour->align_linked();
-			reset_contour_link_flags();
-			h++;
-			
-		}
-		done = true;
-		for (auto & f : (*features)[S_CONTOUR]) {
-			LineFeature * contour = dynamic_cast<LineFeature *>(f);
-			if (!contour->is_aligned()) {
-				runaway++;
-				done = false;
-				break;
-			}
-		}
-	}
-	
-	std::cout << "NOTICE: contour alignment took " << runaway << " pass(es)\n";
-	
-	
-
-	LineFeature * test = dynamic_cast<LineFeature *>((*features)[S_CONTOUR][0]);
-	//test->reverse_slope(test, test);
-
-
-
-	slope_from_directional_points();
-	apply_contour_leaners();
-	reset_contour_link_flags();
-	slope_from_directional_linears();
-	apply_contour_leaners();
-	reset_contour_link_flags();
-	slope_from_closed_loops();
-	std::cout << get_percent_verified() << "% of contours verified\n";
-
-
 }
-
 
 void SlopeDetector::reset_contour_link_flags() {
 	for (auto & f : (*features)[S_CONTOUR]) {
@@ -204,6 +167,57 @@ void SlopeDetector::repair_contours() {
 		}
 	}
 		
+}
+
+void SlopeDetector::link_contours() {
+
+	int h = 0;
+	int runaway = 1;
+
+	bool done = false;
+
+	auto rng = std::default_random_engine {};
+	std::srand(std::time(0));
+
+	while (!done) {
+
+		std::ranges::shuffle((*features)[S_CONTOUR], rng);
+
+		if (runaway >= 500) {
+			std::cout << "could not resolve linked contours\n";
+			break;
+		}
+
+		//recursively align:
+		for (auto & f : (*features)[S_CONTOUR]) {
+			LineFeature * contour = dynamic_cast<LineFeature *>(f);
+			contour->align_linked();
+			reset_contour_link_flags();
+			h++;
+		}
+
+		//check if done:
+		done = true;
+		for (auto & f : (*features)[S_CONTOUR]) {
+			LineFeature * contour = dynamic_cast<LineFeature *>(f);
+			if (!contour->is_aligned()) {
+				runaway++;
+				done = false;
+				break;
+			}
+		}
+	}
+
+	std::cout << "NOTICE: contour alignment took " << runaway << " pass(es)\n";
+
+	
+	for (auto & f : (*features)[S_CONTOUR]) {
+		LineFeature * contour = dynamic_cast<LineFeature *>(f);
+		contour->store_all_links();
+		reset_contour_link_flags();
+	}
+
+	
 }
 
 

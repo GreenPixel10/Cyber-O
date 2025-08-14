@@ -48,7 +48,7 @@ class LineFeature : public Feature {
 		inline void set_linked_flag(bool set) { linked_flag = set;}
 
 		inline bool get_slope_verified() { return slope_verified; }
-		inline void set_slope_verified(bool is_slope_verified) { slope_verified = is_slope_verified; }
+		void set_slope_verified(bool is_slope_verified);
 		inline void lean_slope_correct() {slope_leaner++;}
 		inline void lean_slope_wrong() { slope_leaner--; }
 		void lean_slope_apply();
@@ -61,10 +61,21 @@ class LineFeature : public Feature {
 		inline vector<std::pair<LineFeature *, bool>> get_link_prev() { return link_prev; }
 		inline vector<std::pair<LineFeature *, bool>> get_link_next() { return link_next; }
 
+		void store_all_links();
+		std::vector<LineFeature *> traverse_link_chain();
+		inline void add_linked_reference(LineFeature * lf) { linked_references.push_back(lf); }
+		inline bool are_all_links_gathered() { return all_links_gathered;}
+		inline void set_all_links_gathered(bool b) { all_links_gathered = b; }
+
 		void construct_splines();
 		void construct_polyline();
-		void reverse_slope(LineFeature * origin, LineFeature * last, int lazy_depth = 0);
 		void draw();
+
+		void slope_alignment_reversal(LineFeature * origin = nullptr, LineFeature * last = nullptr, int lazy_depth = 0);
+		void reverse_single_slope();
+		void reverse_all_linked_slopes();
+
+		
 
 		
 		
@@ -89,7 +100,8 @@ class LineFeature : public Feature {
 		bool slope_verified;
 		int slope_leaner; //negative means probably WRONG, positive means probably RIGHT
 
-
+		std::vector<LineFeature*> linked_references;
+		bool all_links_gathered;
 
 
 

@@ -19,12 +19,15 @@ class SlopeDetector {
 		SlopeDetector();
 		inline void set_features(std::map<int, std::vector<Feature *>> * features_) {features = features_; }
 
+
+
 		void detect_slope();
+		void set_debug_colours();
 		void repair_contours();
+		void link_contours();
 		void slope_from_directional_points(); //eg. slope tags
 		void slope_from_directional_linears(); //eg. long cliffs
 		void slope_from_closed_loops(); //eg. hilltops
-		void cross_validate_linked_contours();
 
 		void apply_contour_leaners();
 

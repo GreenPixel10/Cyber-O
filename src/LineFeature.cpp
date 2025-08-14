@@ -18,6 +18,7 @@ LineFeature::LineFeature() {
 	link_next = {};
 	link_prev = {};
 	linked_flag = false;
+	all_links_gathered = false;
 }
 
 void LineFeature::init() {
@@ -43,7 +44,7 @@ void LineFeature::align_linked() {
 	for (auto &n : link_next) {
 		//std::cout << (n.second == true) << (n.first->linked_flag == false) << "\n";
 		if (n.first && n.first != this && n.second == true && n.first && !n.first->linked_flag) {
-			n.first->reverse_slope(this, this, n.second);
+			n.first->slope_alignment_reversal(this, this, n.second);
 			n.second = false;
 			//std::cout << debug << "is now aligned with " << n.first->get_debug() << "\n";
 		}
@@ -52,15 +53,21 @@ void LineFeature::align_linked() {
 	for (auto & n : link_prev) {
 		//std::cout << (n.second == true) << (n.first->linked_flag == false) << "\n";
 		if (n.first && n.first != this && n.second == true && !n.first->linked_flag) {
-			n.first->reverse_slope(this, this, n.second);
+			n.first->slope_alignment_reversal(this, this, n.second);
 			n.second = false;
 			//std::cout << debug << "is now aligned with " << n.first->get_debug() << "\n";
 
 		}
 	}
 
+	set_all_links_gathered(true);
+
 	//std::cout << "-----------------\n";
 
+}
+
+void LineFeature::set_slope_verified(bool is_slope_verified) {
+	
 }
 
 void LineFeature::lean_slope_apply() {
@@ -79,8 +86,8 @@ void LineFeature::lean_slope_apply() {
 
 	//if the contour was not correct...
 	if (slope_leaner < 0) {
-		reverse_slope(this, nullptr, false); //flip it and all linked contours
-		if (DRAW_SLOPE_FLIPS) {col = ofColor::blue;}
+		reverse_all_linked_slopes(); //flip it and all linked contours
+		
 	}
 
 	slope_leaner = 0; //reset leaner (probably unneeded)
@@ -109,6 +116,41 @@ int LineFeature::get_length_at_point(glm::vec2 point) {
 	}
 
 	return -1;
+}
+
+void LineFeature::store_all_links() {
+	linked_references = traverse_link_chain();
+}
+
+std::vector<LineFeature *> LineFeature::traverse_link_chain() {
+
+	std::vector<LineFeature *> A = { this};
+
+	set_linked_flag(true);
+
+	//keep going both ways down the chain!
+	for (auto n : link_prev) {
+		if (n.first && !n.first->linked_flag) {
+
+			std::vector<LineFeature *> B = n.first->traverse_link_chain();
+			for (auto& lf : B) {
+				A.push_back(lf);
+			}
+
+
+		}
+	}
+	for (auto & n : link_next) {
+		if (n.first && !n.first->linked_flag) {
+
+			std::vector<LineFeature *> B = n.first->traverse_link_chain();
+			for (auto & lf : B) {
+				A.push_back(lf);
+			}
+		}
+	}
+	
+	return A;
 }
 
 void LineFeature::construct_splines() {
@@ -213,82 +255,84 @@ void LineFeature::construct_polyline() {
 	line.setClosed(closed);
 }
 
-void LineFeature::reverse_slope(LineFeature* origin, LineFeature* last, int lazy_depth) {
+void LineFeature::slope_alignment_reversal(LineFeature* origin, LineFeature* last, int lazy_depth) {
 
-	
-	//debug stuff
+
+	/* debug stuff
 	std::string gap = "";
 	for(int i = 0; i <= lazy_depth; i++) {
 		gap += "   ";
 	}
-	//std::cout << gap << debug << "\n";
+	std::cout << gap << debug << "\n";
+	*/
 
 
-		bool towards_next = false;
-		//which end to move towards
-		for (auto &n : link_prev) {
-			if (n.first == last) {
-				towards_next = true;
-			}
-		}
+	/////if this contour borders the origin contour
+	///invert correctness of link
+	///this is because the origin (if it exists) is not flipped,
+	/// so anything connecting to it getting flipped must also flip
+	/// its correctness flag
 
-		for (auto & n : link_prev) { //DUP
-			
-			if (n.first == origin) {
-				n.second = !n.second;
-				//std::cout << "inverting backlink ---";
-				n.first->flip_link_to(this);
+	for (auto & n : link_prev) { //DUP
+		if (n.first == origin) {
+			n.second = !n.second;
+			//invert backlink
+			n.first->flip_link_to(this);
 		
-			}
 		}
+	}
 
-		for (auto & n : link_next) { 
-
-			if (n.first == origin) {
-				n.second = !n.second;
-				//std::cout << "inverting backlink ---";
-				n.first->flip_link_to(this);
-			}
+	for (auto & n : link_next) { 
+		if (n.first == origin) {
+			n.second = !n.second;
+			//invert backlink
+			n.first->flip_link_to(this);
 		}
+	}
 
-	
 
+	/////actual reversal:
 	set_linked_flag(true);
-
 	std::reverse(spline_points.begin(), spline_points.end());
 	construct_polyline();
 	//std::cout << gap << "reversing " << debug << "\n";
 
-	if (lazy_depth > 50) {
-		//std::cout << "RECURSION\n";
+
+	//recursion check (should NOT trigger)
+	if (lazy_depth > 500) {
+		std::cout << "RECURSION OVERFLOW\n";
 		return;
 	}
 
-
-	
-		for (auto n : link_prev) {
-			if (n.first && !n.first->linked_flag) {
-				n.first->reverse_slope(origin, this, lazy_depth + 1);
-			}
+	//and keep going both ways down the chain!
+	for (auto n : link_prev) {
+		if (n.first && !n.first->linked_flag) {
+			n.first->slope_alignment_reversal(origin, this, lazy_depth + 1);
 		}
-	
-
-
-	
-		for (auto & n : link_next) {
-			if (n.first && !n.first->linked_flag) {
-				n.first->reverse_slope(origin, this, lazy_depth + 1);
-			}
+	}
+	for (auto & n : link_next) {
+		if (n.first && !n.first->linked_flag) {
+			n.first->slope_alignment_reversal(origin, this, lazy_depth + 1);
 		}
+	}
 
+}
 
-
-
-
-
-
+void LineFeature::reverse_single_slope() {
 	
+	
+	std::reverse(spline_points.begin(), spline_points.end());
+	construct_polyline();
+	if (DRAW_SLOPE_FLIPS) {col = ofColor::blue;}
+	set_slope_verified(true);
 
+}
+
+void LineFeature::reverse_all_linked_slopes() {
+	//reverse_single_slope();
+	for (auto & linked : linked_references) {
+		linked->reverse_single_slope();
+	}
 }
 
 
