@@ -130,7 +130,10 @@ void LineFeature::store_all_links() {
 
 std::vector<LineFeature *> LineFeature::traverse_link_chain() {
 
-	std::vector<LineFeature *> A = { this};
+	std::vector<LineFeature *> A = {};
+
+	if (!linked_flag) { A.push_back(this);} //only add if not linked yet
+											//(stops calling contour getting duplicated)
 
 	set_linked_flag(true);
 
@@ -326,7 +329,7 @@ void LineFeature::slope_alignment_reversal(LineFeature* origin, LineFeature* las
 
 void LineFeature::reverse_single_slope() {
 	
-	
+	//std::cout << "Reversing " << debug << "!\n";
 	std::reverse(spline_points.begin(), spline_points.end());
 	construct_polyline();
 	if (DRAW_SLOPE_FLIPS) {col = ofColor::blue;}
@@ -334,7 +337,8 @@ void LineFeature::reverse_single_slope() {
 }
 
 void LineFeature::reverse_all_linked_slopes() {
-	//reverse_single_slope();
+	reverse_single_slope();
+	std::cout << linked_references.size() << "\n";
 	for (auto & linked : linked_references) {
 		linked->reverse_single_slope();
 	}
@@ -342,10 +346,27 @@ void LineFeature::reverse_all_linked_slopes() {
 
 
 void LineFeature::draw() {
-	ofSetLineWidth(get_slope_verified()?2:1);
+	ofSetLineWidth(get_slope_verified()?3:1);
 	ofSetColor(col);
 	line.draw();
 	//std::cout << col << "\n";
+
+
+	
+	#define DRAW_TAGS true
+	#define DRAW_TAGS_ALWAYS true
+	if (DRAW_TAGS && (DRAW_TAGS_ALWAYS || get_slope_verified())) {
+		for (int i = 1; i < line.size(); i++) {
+			glm::vec2 p = line[i];
+			glm::vec2 last_p = line[i - 1];
+			glm::vec2 dir = p - last_p;
+			glm::vec2 mid = (p+last_p)/2;
+			dir = { -dir.y, dir.x };
+			dir = glm::normalize(dir);
+			dir *= 400;
+			ofDrawLine(mid, mid+dir);
+		}
+	}
 
 	#define DRAW_ENDPOINTS true
 	if (DRAW_ENDPOINTS) {
@@ -368,10 +389,6 @@ void LineFeature::draw() {
 		
 	}
 
-	#define DRAW_TAGS true
-	if (DRAW_LINKS) {
-
-	}
 
 }
 

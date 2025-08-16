@@ -9,6 +9,7 @@ void ofApp::setup() {
 
 
 	load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
+	//load_map("D:/Projects/OrienteeringSim/camp_fortune_broken.omap");
 	//load_map("D:/Projects/OrienteeringSim/ark.omap");
 	//load_map("D:/Projects/OrienteeringSim/test2.omap");
 	//load_map("D:/Projects/OrienteeringSim/forest.omap");
@@ -91,6 +92,8 @@ void ofApp::load_features() {
 			
 		}
 	}
+
+	std::cout << line_features.size() << "\n";
 
 
 }
@@ -261,7 +264,7 @@ void ofApp::draw(){
 #define DRAW_MODE_ALL_KNOWN 1
 #define DRAW_MODE_SPECIFIED 2
 
-	int draw_mode = DRAW_MODE_SPECIFIED;
+	int draw_mode = DRAW_MODE_ALL_KNOWN;
 
 	std::vector<int> features_to_draw = {S_CONTOUR};
 

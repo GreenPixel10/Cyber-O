@@ -63,7 +63,7 @@ class LineFeature : public Feature {
 
 		void store_all_links();
 		std::vector<LineFeature *> traverse_link_chain();
-		inline void add_linked_reference(LineFeature * lf) { linked_references.push_back(lf); }
+		inline void add_linked_reference(LineFeature * lf) { if(lf!=this){linked_references.push_back(lf);} }
 		inline bool are_all_links_gathered() { return all_links_gathered;}
 		inline void set_all_links_gathered(bool b) { all_links_gathered = b; }
 

@@ -12,15 +12,13 @@ void SlopeDetector::detect_slope() {
 
 	
 
-	//set_debug_colours();
+	set_debug_colours();
 
 	repair_contours();
 	align_contours();
 
 
 	slope_from_directional_points();
-	apply_contour_leaners();
-
 	slope_from_directional_linears();
 	apply_contour_leaners();
 
@@ -159,8 +157,8 @@ void SlopeDetector::repair_contours() {
 					contourA->add_link_next({ contourB, !aligned });
 				}
 
-				std::cout << "linking " << ((B_side == _START) ? "start" : "end") << " of " << contourA->get_debug() << " with "
-						  << ((B_side == _START) ? "start" : "end") << " of " << contourB->get_debug() << " \n";
+				//std::cout << "linking " << ((B_side == _START) ? "start" : "end") << " of " << contourA->get_debug() << " with "
+						 // << ((B_side == _START) ? "start" : "end") << " of " << contourB->get_debug() << " \n";
 
 
 				//contourA->set_colour(ofColor::green);
@@ -184,7 +182,7 @@ void SlopeDetector::align_contours() {
 	bool done = false;
 
 	auto rng = std::default_random_engine {};
-	std::srand(std::time(0));
+	std::srand(696969);
 
 	while (!done) {
 
@@ -355,6 +353,7 @@ void SlopeDetector::apply_contour_leaners() {
 
 	for (auto c : (*features)[S_CONTOUR]) {
 		LineFeature * contour = dynamic_cast<LineFeature *>(c);
+		if (contour->get_slope_verified()) { continue;}
 		contour->lean_slope_apply();
 	}
 }
