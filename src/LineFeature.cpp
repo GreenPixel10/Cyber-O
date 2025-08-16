@@ -33,6 +33,33 @@ bool LineFeature::get_closed_via_linked() {
 	return false;
 }
 
+bool LineFeature::is_facing_outwards() {
+
+	int s = line.size();
+	double total = 0;
+
+	for (int i = 0; i < s; i++) {
+
+		int last_index = (i == 0) ? (s-1) : (i-1);
+		int next_index = (i == s-1) ? (0) : (i + 1);
+		
+		glm::vec2 A = line[last_index];
+		glm::vec2 B = line[i];
+		glm::vec2 C = line[next_index];
+
+		glm::vec2 BA = A - B;
+		glm::vec2 BC = C - B;
+
+		double dot = (BA.x * BC.x) + (BA.y * BC.y);
+		double det = (BA.x * BC.y) - (BA.y * BC.x);     
+		double angle = atan2(det, dot) ;
+		angle = (angle * RAD_TO_DEG);
+		total += angle;
+	}
+
+	return total > 0;
+}
+
 void LineFeature::align_linked() {
 
 
@@ -338,7 +365,6 @@ void LineFeature::reverse_single_slope() {
 
 void LineFeature::reverse_all_linked_slopes() {
 	reverse_single_slope();
-	std::cout << linked_references.size() << "\n";
 	for (auto & linked : linked_references) {
 		linked->reverse_single_slope();
 	}

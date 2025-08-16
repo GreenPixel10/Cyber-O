@@ -12,7 +12,7 @@ void SlopeDetector::detect_slope() {
 
 	
 
-	set_debug_colours();
+	//set_debug_colours();
 
 	repair_contours();
 	align_contours();
@@ -34,8 +34,6 @@ void SlopeDetector::set_debug_colours() {
 	std::vector<ofColor> cols = { ofColor::yellow, ofColor::orange, ofColor::red, ofColor::purple, ofColor::blue, ofColor::green };
 	std::vector<std::string> colnames = { "yellow", "orange", "red", "purple", "blue", "green" };
 	int numcols = cols.size();
-
-	//std::cout << (*features)[S_CONTOUR].size() << "\n";
 
 	for (int i = 0; i < (*features)[S_CONTOUR].size(); i++) {
 
@@ -107,7 +105,6 @@ void SlopeDetector::repair_contours() {
 			if (A_side == _START) {B_side = (ss_dist < se_dist)?_START:_END; }
 			if (A_side == _END) {B_side = (es_dist < ee_dist)?_START:_END; }
 
-			//std::cout << A_side << " " << B_side << "\n";
 
 			bool aligned = !(A_side == B_side); //if both a and b are the same end, they aren't aligned
 
@@ -141,7 +138,6 @@ void SlopeDetector::repair_contours() {
 
 
 			int variance = std::max(glm::distance(Pex, ideal_midpoint), glm::distance(Qex, ideal_midpoint));
-			//std::cout << "variance " << (float)variance / 100 << "\n";
 
 			
 
@@ -160,8 +156,6 @@ void SlopeDetector::repair_contours() {
 				//std::cout << "linking " << ((B_side == _START) ? "start" : "end") << " of " << contourA->get_debug() << " with "
 						 // << ((B_side == _START) ? "start" : "end") << " of " << contourB->get_debug() << " \n";
 
-
-				//contourA->set_colour(ofColor::green);
 
 			}
 			
@@ -340,8 +334,14 @@ void SlopeDetector::slope_from_directional_linears() {
 void SlopeDetector::slope_from_closed_loops() {
 	for (auto c : (*features)[S_CONTOUR]) {
 		LineFeature * contour = dynamic_cast<LineFeature *>(c);
+
 		if (contour->get_slope_verified()) { continue;}
 		if (contour->get_closed()) {
+
+			if (!contour->is_facing_outwards()) {
+				contour->reverse_all_linked_slopes();
+			}
+			
 			contour->set_slope_verified(true, true); //recursion needed?
 			contour->set_colour(ofColor::purple);
 			}

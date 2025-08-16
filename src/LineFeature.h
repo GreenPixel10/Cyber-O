@@ -43,6 +43,7 @@ class LineFeature : public Feature {
 		inline ofPolyline get_line() { return line;}
 		inline bool get_closed() { return closed;}
 		bool get_closed_via_linked();
+		bool is_facing_outwards();
 
 		void align_linked();
 		inline void set_linked_flag(bool set) { linked_flag = set;}
