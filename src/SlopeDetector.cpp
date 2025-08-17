@@ -15,13 +15,18 @@ void SlopeDetector::detect_slope() {
 	set_debug_colours();
 
 
+	LineFeature * contourA = dynamic_cast<LineFeature *>((*features)[S_CONTOUR][0]);
+	LineFeature * contourB = dynamic_cast<LineFeature *>((*features)[S_CONTOUR][1]);
+	get_similarity(contourA, contourB);
+	get_similarity(contourB, contourA);
+
 	for (auto cA : (*features)[S_CONTOUR]) {
-		LineFeature * contourA = dynamic_cast<LineFeature *>(cA);
+		
 		for (auto cB : (*features)[S_CONTOUR]) {
 			if (cB == cA) {continue;}
-			LineFeature * contourB = dynamic_cast<LineFeature *>(cB);
+			
 
-			get_similarity(contourA, contourB);
+			
 		}
 	}
 
@@ -384,18 +389,19 @@ int SlopeDetector::get_similarity(LineFeature * f1, LineFeature * f2) {
 	int overall_nearness_length = 0;
 
 	ofPolyline l1 = f1->get_line();
-	ofPolyline l2 = f1->get_line();
+	ofPolyline l2 = f2->get_line();
 
 	#define SIMILAR_THRESHOLD 40 //metres
 
-	for (auto& p : l1) {
-		glm::vec3 p2 = l2.getClosestPoint(p);
-		int dist = glm::distance(p, p2);
+	for (glm::vec3 & p1 : l1) {
+		glm::vec3 p2 = l2.getClosestPoint(p1);
+		//std::cout << p1/100 << " --- " << p2/100 << "\n";
+		int dist = glm::distance(p1, p2);
 		nearness.push_back(dist / 100);
 	}
 
 	for (int i = 1; i < nearness.size(); i++) {
-
+		
 		bool similar_segment = (nearness[i] <= SIMILAR_THRESHOLD && nearness[i-1] <= SIMILAR_THRESHOLD);
 
 		if (similar_segment) {
