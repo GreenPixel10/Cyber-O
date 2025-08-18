@@ -12,27 +12,10 @@ void SlopeDetector::detect_slope() {
 
 	
 
-	set_debug_colours();
-
-
-	LineFeature * contourA = dynamic_cast<LineFeature *>((*features)[S_CONTOUR][0]);
-	LineFeature * contourB = dynamic_cast<LineFeature *>((*features)[S_CONTOUR][1]);
-	get_similarity(contourA, contourB);
-	get_similarity(contourB, contourA);
-
-	for (auto cA : (*features)[S_CONTOUR]) {
-		
-		for (auto cB : (*features)[S_CONTOUR]) {
-			if (cB == cA) {continue;}
-			
-
-			
-		}
-	}
+	//set_debug_colours();
 
 	repair_contours();
 	align_contours();
-
 
 	slope_from_directional_points();
 	slope_from_directional_linears();
@@ -40,7 +23,10 @@ void SlopeDetector::detect_slope() {
 
 	slope_from_closed_loops();
 
+	slope_from_similarity();
+
 	std::cout << get_percent_verified() << "% of contours verified\n";
+	std::cout << get_num_unverified() << " contours could not be verified\n";
 
 
 }
@@ -186,6 +172,9 @@ void SlopeDetector::repair_contours() {
 
 void SlopeDetector::align_contours() {
 
+
+	#define CONTOUR_ALIGNMENT_RUNAWAY 125
+
 	int h = 0;
 	int runaway = 1;
 
@@ -198,7 +187,7 @@ void SlopeDetector::align_contours() {
 
 		std::ranges::shuffle((*features)[S_CONTOUR], rng);
 
-		if (runaway >= 125) {
+		if (runaway >= CONTOUR_ALIGNMENT_RUNAWAY) {
 			std::cout << "could not resolve linked contours\n";
 			break;
 		}
@@ -365,6 +354,59 @@ void SlopeDetector::slope_from_closed_loops() {
 	}
 }
 
+void SlopeDetector::slope_from_similarity() {
+
+#define SIMILARITY_LENGTH_THRESHOLD 175 //metres
+
+	int verified_count = -1;
+
+	while (verified_count != 0) {
+		verified_count = 0;
+
+		for (auto cA : (*features)[S_CONTOUR]) {
+			LineFeature * contourA = dynamic_cast<LineFeature *>(cA);
+			if (contourA->get_slope_verified()) {
+				//std::cout << cA->get_debug() << " is already verified\n";
+				continue;
+			} //contour has already been matched
+
+			ofPolyline line = contourA->get_line();
+
+			for (auto cB : (*features)[S_CONTOUR]) {
+
+				if (cB == cA) {
+					//std::cout << "Skipping " << cA->get_debug() << " vs " << cB->get_debug() << ": Same Contour " << "\n ";
+					continue;
+				} //same contour
+
+				LineFeature * contourB = dynamic_cast<LineFeature *>(cB);
+
+				if (contourB->get_slope_verified() == false) {
+					//std::cout << "Skipping " << cA->get_debug() << " vs " << cB->get_debug() << ": " << cB->get_debug() << " is not verified." << "\n ";
+					continue;
+				} //other contour is not confirmed yet
+
+				int similarity = get_similarity(contourB, contourA);
+				bool needs_flip = similarity < 0;
+				similarity = abs(similarity);
+
+
+				int contourA_metre_length = (int)((line.getLengthAtIndex(line.size() - 1)) / 100); //surely better way
+				int threshold = std::min(SIMILARITY_LENGTH_THRESHOLD, contourA_metre_length) * 0.95;
+				
+				if (similarity >= threshold) {
+					contourA->set_slope_verified(true, true);
+					contourA->set_colour(ofColor::cyan);
+					if (needs_flip) { contourA->reverse_all_linked_slopes();}
+					verified_count++;
+				}
+			}
+		}
+
+		std::cout << "verified " << verified_count << " contours via similarity\n";
+	}
+}
+
 void SlopeDetector::apply_contour_leaners() {
 
 	for (auto c : (*features)[S_CONTOUR]) {
@@ -383,10 +425,25 @@ int SlopeDetector::get_percent_verified() {
 	return ((double)verified / (double)(((*features)[S_CONTOUR]).size())) * 100;
 }
 
+int SlopeDetector::get_num_unverified() {
+	int unverified = 0;
+	for (auto c : (*features)[S_CONTOUR]) {
+		LineFeature * contour = dynamic_cast<LineFeature *>(c);
+		if (!contour->get_slope_verified()) {
+			unverified++;
+		}
+	}
+	return unverified;
+}
+
+
 int SlopeDetector::get_similarity(LineFeature * f1, LineFeature * f2) {
 	std::vector<int> nearness;
 
 	int overall_nearness_length = 0;
+
+	int direction = 0;
+	int last_pos_along = -1;
 
 	ofPolyline l1 = f1->get_line();
 	ofPolyline l2 = f2->get_line();
@@ -395,9 +452,14 @@ int SlopeDetector::get_similarity(LineFeature * f1, LineFeature * f2) {
 
 	for (glm::vec3 & p1 : l1) {
 		glm::vec3 p2 = l2.getClosestPoint(p1);
-		//std::cout << p1/100 << " --- " << p2/100 << "\n";
 		int dist = glm::distance(p1, p2);
 		nearness.push_back(dist / 100);
+
+		int pos_along = f2->get_length_at_point(p2);
+		if (last_pos_along != -1) { direction += pos_along - last_pos_along;}
+		last_pos_along = pos_along;
+
+
 	}
 
 	for (int i = 1; i < nearness.size(); i++) {
@@ -411,8 +473,11 @@ int SlopeDetector::get_similarity(LineFeature * f1, LineFeature * f2) {
 		}
 	}
 
-	std::cout << f1->get_debug() << " to " << f2->get_debug() << ": " << overall_nearness_length << "m of similarity\n";
+	//std::cout << f1->get_debug() << " to " << f2->get_debug() << ": " << overall_nearness_length << "m of similarity\n";
 
-	return overall_nearness_length;
+	
+	int needs_flip = direction < 0 ? -1:1;
+
+	return overall_nearness_length * needs_flip;
 
 }

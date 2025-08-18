@@ -28,11 +28,13 @@ class SlopeDetector {
 		void slope_from_directional_points(); //eg. slope tags
 		void slope_from_directional_linears(); //eg. long cliffs
 		void slope_from_closed_loops(); //eg. hilltops
+		void slope_from_similarity();
 		
 
 		void apply_contour_leaners();
 
 		int get_percent_verified();
+		int get_num_unverified();
 
 		int get_similarity(LineFeature* f1, LineFeature* f2);
 

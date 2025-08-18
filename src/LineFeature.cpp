@@ -372,12 +372,19 @@ void LineFeature::reverse_all_linked_slopes() {
 
 
 void LineFeature::draw() {
-	ofSetLineWidth(get_slope_verified()?3:1);
-	ofSetColor(col);
+	ofSetLineWidth(get_slope_verified()?1:5);
+	ofSetColor(get_slope_verified()?col:ofColor::red);
+	
+
+
+
+	#define ISOLATE_UNVERIFIED false
+
+	if (ISOLATE_UNVERIFIED && get_slope_verified()) {
+		return;
+	}
+	
 	line.draw();
-	//std::cout << col << "\n";
-
-
 	
 	#define DRAW_TAGS true
 	#define DRAW_TAGS_ALWAYS true
