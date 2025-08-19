@@ -7,10 +7,12 @@ SlopeDetector::SlopeDetector() { }
 
 
 
+
+
 void SlopeDetector::detect_slope() {
 
 
-	
+	cast_contours();
 
 	//set_debug_colours();
 
@@ -29,6 +31,14 @@ void SlopeDetector::detect_slope() {
 	std::cout << get_num_unverified() << " contours could not be verified\n";
 
 
+}
+
+
+void SlopeDetector::cast_contours() {
+	for (auto & f : (*features)[S_CONTOUR]) {
+		LineFeature * contour = dynamic_cast<LineFeature *>(f);
+		contours.push_back(contour);
+	}
 }
 
 

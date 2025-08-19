@@ -233,6 +233,7 @@
     <ClCompile Include="src\PointFeature.cpp" />
     <ClCompile Include="src\SlopeDetector.cpp" />
     <ClCompile Include="src\SymbolManager.cpp" />
+	<ClCompile Include="src\HeightMapBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Feature.h" />
@@ -241,6 +242,7 @@
     <ClInclude Include="src\PointFeature.h" />
     <ClInclude Include="src\SlopeDetector.h" />
     <ClInclude Include="src\SymbolManager.h" />
+	<ClInclude Include="src\HeightMapBuilder.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(OF_ROOT)\libs\openFrameworksCompiled\project\vs\openframeworksLib.vcxproj">

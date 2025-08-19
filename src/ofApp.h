@@ -5,6 +5,7 @@
 #include "PointFeature.h"
 #include "SymbolManager.h"
 #include "SlopeDetector.h"
+#include "HeightMapBuilder.h"
 
 
 #define win_w 1024
@@ -45,11 +46,13 @@ class ofApp : public ofBaseApp{
 		void get_view_transforms();
 		
 		std::vector<std::vector<std::string>> parse_delimited(std::string s, char d1, char d2);
+
 		glm::vec2 scale;
 		glm::vec2 offset;
 
 		SymbolManager sm;
 		SlopeDetector sd;
+		HeightMapBuilder hb;
 		
 		std::vector<LineFeature*> line_features;
 		std::vector<PointFeature*> point_features;

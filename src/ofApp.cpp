@@ -29,6 +29,9 @@ void ofApp::setup() {
 	sd.set_features(&features);
 	sd.detect_slope();
 
+	hb.load_contours(sd.contours);
+	hb.build();
+
 
 
 
@@ -257,38 +260,46 @@ void ofApp::draw(){
 
 	camera.begin();
 
-
-	for (auto & c : line_features) {
-		//c->draw();
-	}
-
-	for (auto & t : point_features) {
-		//t->draw();
-	}
-
 #define DRAW_MODE_ALL 0
 #define DRAW_MODE_ALL_KNOWN 1
 #define DRAW_MODE_SPECIFIED 2
+
+
+#define DRAW_MODE_MAP false
+#define DRAW_MODE_DEM true
 
 	int draw_mode = DRAW_MODE_SPECIFIED;
 
 	std::vector<int> features_to_draw = {S_CONTOUR};
 
-	if (draw_mode == DRAW_MODE_SPECIFIED) { //render specified
-		for (auto & ftd : features_to_draw) {
-			for (Feature * f : features[ftd]) {
-				f->draw();
+
+
+
+	if (DRAW_MODE_MAP) {
+		if (draw_mode == DRAW_MODE_SPECIFIED) { //render specified
+			for (auto & ftd : features_to_draw) {
+				for (Feature * f : features[ftd]) {
+					f->draw();
+				}
 			}
 		}
+
+		else {
+			for (auto & ftd : sm.symbol_names) {
+				if (DRAW_MODE_ALL_KNOWN && ftd.first == S_UNKNOWN) {
+					continue;
+				}
+				for (Feature * f : features[ftd.first]) {
+					f->draw();
+				}
+			}
+		}
+
 	}
 
-	else {
-		for (auto & ftd : sm.symbol_names) {
-			if (DRAW_MODE_ALL_KNOWN && ftd.first == S_UNKNOWN) { continue;}
-			for (Feature * f : features[ftd.first]) {
-				f->draw();
-			}
-		}
+
+	if (DRAW_MODE_DEM) {
+		hb.draw();
 	}
 
 

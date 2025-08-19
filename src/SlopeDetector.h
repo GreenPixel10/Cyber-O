@@ -20,7 +20,7 @@ class SlopeDetector {
 		inline void set_features(std::map<int, std::vector<Feature *>> * features_) {features = features_; }
 
 
-
+		void cast_contours();
 		void detect_slope();
 		void set_debug_colours();
 		void repair_contours();
@@ -41,7 +41,8 @@ class SlopeDetector {
 
 		void reset_contour_link_flags();
 
+		std::vector<LineFeature *> contours;
 
 	private:
-		std::map<int, std::vector<Feature *>>* features; 
+		std::map<int, std::vector<Feature *>>* features;
 };
