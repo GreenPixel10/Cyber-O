@@ -8,7 +8,7 @@ void HeightMapBuilder::load_contours(std::vector<LineFeature *> contours_){
 }
 
 void HeightMapBuilder::build() {
-
+	
 }
 
 

@@ -8,6 +8,7 @@
 #include "SymbolManager.h"
 #include <iostream>
 
+#include "CDT.h"
 
 class HeightMapBuilder {
 
