@@ -90,6 +90,9 @@ class LineFeature : public Feature {
 		bool is_aligned();
 		bool linked_flag;
 
+		std::map<int, int> elevation_possibilities;
+		int elevation = INT_MIN;
+
 	private:
 		std::vector<LinePoint> points; //raw data
 		std::vector<SplinePoint> spline_points; //parsed spline data (3 points in each)

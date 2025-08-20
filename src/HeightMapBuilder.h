@@ -10,9 +10,12 @@
 
 #include "CDT.h"
 
+class demedge;
+class simpleContour;
+
 class demp {
 	public:
-		demp(glm::vec2 pos_, LineFeature* contour_);
+		demp(glm::vec2 pos_, simpleContour* contour_);
 		inline double get_x(){return pos.x;};
 		inline double get_y(){return pos.y;};
 
@@ -22,10 +25,12 @@ class demp {
 
 		inline double cross2(glm::vec2 A, glm::vec2 B) { return (A.x * B.y) - (B.x * A.y); }
 
+		
+		void propagate();
 
 
 		glm::vec2 pos;
-		LineFeature* contour;
+		simpleContour* contour;
 
 		glm::vec2 last;
 		glm::vec2 next;
@@ -33,7 +38,10 @@ class demp {
 		glm::vec2 nextV;
 		glm::vec2 lastV;
 
-		std::vector<demp*> connections;
+		std::vector<demedge*> connections;
+		bool visited;
+
+		
 
 };
 
@@ -44,9 +52,29 @@ class demedge {
 		demp* v1;
 		demp* v2;
 		int slope;
+		
+
 };
 
 
+class link {
+	public:
+	link(simpleContour * link_to_, int confidence_, int slope_);
+	simpleContour* link_to;
+	int confidence;
+	int slope;
+};
+
+class simpleContour {
+	public:
+		simpleContour(LineFeature* lf);
+
+		LineFeature* contour;
+
+		std::vector<link*> links;
+
+		link * get_link_by_contour(simpleContour * target);
+};
 
 class HeightMapBuilder {
 
@@ -56,16 +84,20 @@ class HeightMapBuilder {
 		void build();
 		void process_raw_contours();
 		void triangulate();
-		void draw();
+		void calculate_slopes();
+		void draw_triangulation();
+		void draw_DEM();
 
 	private:
 
 		CDT::Triangulation<double> cdt;
 
-		std::vector<LineFeature *> contours;
+		//std::vector<LineFeature *> contours;
 		std::vector<demp*> demps;
 		std::vector<demedge*> constrained_edges;
 		std::vector<demedge *> tri_edges;
 
 		CDT::EdgeUSet edges;
+
+		std::vector<simpleContour *> simple_contours;
 };

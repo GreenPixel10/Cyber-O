@@ -14,7 +14,7 @@ void SlopeDetector::detect_slope() {
 
 	cast_contours();
 
-	//set_debug_colours();
+	set_debug_colours();
 
 	repair_contours();
 	align_contours();
@@ -358,7 +358,7 @@ void SlopeDetector::slope_from_closed_loops() {
 			}
 			
 			contour->set_slope_verified(true, true); //recursion needed?
-			contour->set_colour(ofColor::purple);
+			//contour->set_colour(ofColor::purple);
 			}
 		
 	}
@@ -406,7 +406,7 @@ void SlopeDetector::slope_from_similarity() {
 				
 				if (similarity >= threshold) {
 					contourA->set_slope_verified(true, true);
-					contourA->set_colour(ofColor::cyan);
+					//contourA->set_colour(ofColor::cyan);
 					if (needs_flip) { contourA->reverse_all_linked_slopes();}
 					verified_count++;
 				}

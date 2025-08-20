@@ -266,7 +266,7 @@ void ofApp::draw(){
 
 
 #define DRAW_MODE_MAP true
-#define DRAW_MODE_DEM true
+#define DRAW_MODE_DEM false
 
 	int draw_mode = DRAW_MODE_SPECIFIED;
 
@@ -299,7 +299,7 @@ void ofApp::draw(){
 
 
 	if (DRAW_MODE_DEM) {
-		hb.draw();
+		hb.draw_triangulation();
 	}
 
 

@@ -106,7 +106,7 @@ void LineFeature::set_slope_verified(bool is_slope_verified, bool recurse) {
 void LineFeature::lean_slope_apply() {
 
 
-#define DRAW_SLOPE_FLIPS true
+#define DRAW_SLOPE_FLIPS false
 
 
 	if (slope_leaner == 0) { //not enough info
@@ -115,7 +115,7 @@ void LineFeature::lean_slope_apply() {
 
 	//otherwise, slope determined!
 	set_slope_verified(true, true);
-	col = ofColor::green;
+	//col = ofColor::green;
 
 	//if the contour was not correct...
 	if (slope_leaner < 0) {

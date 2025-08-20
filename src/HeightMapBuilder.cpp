@@ -6,39 +6,61 @@ HeightMapBuilder::HeightMapBuilder(){
 
 
 void HeightMapBuilder::load_contours(std::vector<LineFeature *> contours_){
-	contours = contours_;
+	//contours = contours_;
+	for (auto& c : contours_) {
+		simple_contours.push_back(new simpleContour(c));
+	}
+
 }
 
 void HeightMapBuilder::build() {
 
 	process_raw_contours();
 	triangulate();
+	calculate_slopes();
 
+	for (auto& c : simple_contours) {
+		for (auto& d : demps) {
+			for (auto & e : d->connections) {
+				if (e->v1->contour != c && e->v2->contour != c) {
+					continue;
+				}
+				
+				simpleContour* connected_to = nullptr;
+				int slope = 0;
+				if (e->v1 == d) {
+					connected_to = e->v2->contour;
+					slope = e->slope;
+				}
+				if (e->v2 == d) {
+					connected_to = e->v1->contour;
+					slope = -(e->slope);
+				}
 
-	for (auto& e : tri_edges) {
-		glm::vec2 p1 = e->v1->pos;
-		glm::vec2 p2 = e->v2->pos;
-
-		if (e->v1->contour == e->v2->contour) {
-			continue;
+				link * new_link = c->get_link_by_contour(connected_to);
+				if (new_link == nullptr) {
+					c->links.push_back(new link(connected_to, 1, slope));
+				} else {
+					new_link->slope += slope;
+					new_link->confidence++;
+				}
+			}
 		}
-
-		glm::vec2 v12 = p2 - p1;
-		glm::vec2 v21 = p1 - p2;
-
-		int slope1 = e->v1->slope_direction_by_vector(v12);
-		int slope2 = e->v2->slope_direction_by_vector(v21);
-
-		std::cout << slope1 << " " << slope2 << "\n";
-		//std::cout << e->v2->lastV << " " << e->v2->nextV << " " << v21 << "\n\n";
-
-		if (slope1 == slope2) {
-			continue;
-		}
-
-		e->slope = slope1;
-
 	}
+
+	for (auto & c : simple_contours) {
+		std::sort(c->links.begin(), c->links.end(), [](auto & left, auto & right) {
+			return abs(left->confidence) < abs(right->confidence);
+		});
+		c->links.pop_back();
+		std::reverse(c->links.begin(), c->links.end());
+	}
+
+	std::cout << simple_contours[1]->contour->get_debug() << "\n";
+	for (auto& test : simple_contours[1]->links) {
+		std::cout << test->link_to->contour->get_debug() << " " << test->confidence << " " << test->slope << "\n";
+	}
+
 
 	
 	
@@ -47,8 +69,8 @@ void HeightMapBuilder::build() {
 void HeightMapBuilder::process_raw_contours() {
 
 	int id = 0;
-	for (auto & c : contours) {
-		ofPolyline line = c->get_line();
+	for (auto & c : simple_contours) {
+		ofPolyline line = c->contour->get_line();
 		for (int i = 0; i < line.size(); i++) {
 
 
@@ -57,7 +79,7 @@ void HeightMapBuilder::process_raw_contours() {
 			glm::vec2 p = line[i];
 
 			if (i == 0) {
-				if (c->get_closed()) {
+				if (c->contour->get_closed()) {
 					last = line[line.size() - 1];
 				}
 				else {
@@ -71,7 +93,7 @@ void HeightMapBuilder::process_raw_contours() {
 
 
 			if (i == line.size() - 1) {
-				if (c->get_closed()) {
+				if (c->contour->get_closed()) {
 					next = line[0];
 				} else {
 					next = p;
@@ -136,18 +158,49 @@ void HeightMapBuilder::triangulate() {
 		demp * d2 = demps[i2];
 
 		if (d1->contour == d2->contour) {
-			continue; //skip self-connections?
+			//continue; //skip self-connections?
 		}
 
-		tri_edges.push_back(new demedge(i1, i2, d1, d2));
+		demedge* new_edge = new demedge(i1, i2, d1, d2);
 		
+		tri_edges.push_back(new_edge);
+
+		d1->connections.push_back(new_edge);
+		d2->connections.push_back(new_edge);
+		
+	}
+}
+
+void HeightMapBuilder::calculate_slopes() {
+	for (auto & e : tri_edges) {
+		glm::vec2 p1 = e->v1->pos;
+		glm::vec2 p2 = e->v2->pos;
+
+		if (e->v1->contour == e->v2->contour) {
+			continue;
+		}
+
+		glm::vec2 v12 = p2 - p1;
+		glm::vec2 v21 = p1 - p2;
+
+		int slope1 = e->v1->slope_direction_by_vector(v12);
+		int slope2 = e->v2->slope_direction_by_vector(v21);
+
+		std::cout << slope1 << " " << slope2 << "\n";
+		//std::cout << e->v2->lastV << " " << e->v2->nextV << " " << v21 << "\n\n";
+
+		if (slope1 == slope2) {
+			continue;
+		}
+
+		e->slope = slope1;
 	}
 }
 
 
 
 
-void HeightMapBuilder::draw() {
+void HeightMapBuilder::draw_triangulation() {
 
 		ofSetColor(ofColor::purple);
 
@@ -178,7 +231,7 @@ void HeightMapBuilder::draw() {
 
 }
 
-demp::demp(glm::vec2 pos_, LineFeature * contour_): pos(pos_), contour(contour_){
+demp::demp(glm::vec2 pos_, simpleContour * contour_): pos(pos_), contour(contour_), visited(false){
 }
 
 void demp::calculate_slope_ranges(glm::vec2 last_, glm::vec2 next_) {
@@ -207,20 +260,17 @@ int demp::slope_direction_by_vector(glm::vec2 vec) {
 	float Ba = atan2(B.y, B.x);
 
 
-	if (Aa > Ba) { //make sure A is positive
+	if (Aa > Ba) {
 		Aa -= TWO_PI;
 	}
 	
-	bool ok = (Na > Aa && Na < Ba);
+	bool inside = (Na > Aa && Na < Ba);
 
 	Na -= TWO_PI;
 
-	bool ok2 = (Na > Aa && Na < Ba);
+	bool inside2 = (Na > Aa && Na < Ba);
 
-	//std::cout << Aa << " " << Na << " " << Ba << "\n";
-	//std::cout << (ok||ok2 ? "Uphill" : "Downhill") << "\n\n";
-
-	return (ok || ok2) ? 1 : -1;
+	return (inside || inside2) ? 1 : -1;
 
 	//-1: downhill
 	//+1: uphill
@@ -235,4 +285,38 @@ demedge::demedge(std::size_t i1_, std::size_t i2_, demp* v1_, demp* v2_) {
 	v1 = v1_;
 	v2 = v2_;
 	slope = 0;
+}
+
+void demp::propagate() {
+	return;
+	visited = true;
+	for (auto& c : connections) {
+		if (c->slope == 0) {
+			continue;
+		}
+
+		if (c->v2 != this) {
+			//c->v2->propagate();
+			//c->v2->
+		}
+		if (c->v1 != this) {
+			//c->v1->propagate();
+		}
+
+	}
+}
+
+simpleContour::simpleContour(LineFeature * lf): contour(lf){
+}
+
+link* simpleContour::get_link_by_contour(simpleContour * target) {
+	for (auto& l : links) {
+		if (l->link_to == target) {
+			return l;
+		}
+	}
+	return nullptr;
+}
+
+link::link(simpleContour * link_to_, int confidence_, int slope_): link_to(link_to_), confidence(confidence_), slope(slope_) {
 }
