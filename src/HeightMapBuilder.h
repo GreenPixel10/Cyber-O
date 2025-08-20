@@ -19,12 +19,16 @@ class demp {
 		glm::vec2 pos;
 		LineFeature* contour;
 
+		std::vector<demp*> connections;
+
 };
 
 class demedge {
 	public:
-		demedge(std::size_t v1_, std::size_t v2_);
+		demedge(std::size_t i1_, std::size_t i2_, demp* v1_ = nullptr, demp* v2_ = nullptr);
 		std::pair<std::size_t, std::size_t> vertices;
+		demp* v1;
+		demp* v2;
 };
 
 
@@ -35,6 +39,7 @@ class HeightMapBuilder {
 		HeightMapBuilder();
 		void load_contours(std::vector<LineFeature *> contours_);
 		void build();
+		void process_raw_contours();
 		void triangulate();
 		void draw();
 
@@ -45,6 +50,7 @@ class HeightMapBuilder {
 		std::vector<LineFeature *> contours;
 		std::vector<demp*> demps;
 		std::vector<demedge*> constrained_edges;
+		std::vector<demedge *> tri_edges;
 
 		CDT::EdgeUSet edges;
 };

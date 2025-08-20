@@ -1,6 +1,8 @@
 #include "HeightMapBuilder.h"
 
-HeightMapBuilder::HeightMapBuilder(){}
+HeightMapBuilder::HeightMapBuilder(){
+	cdt = CDT::Triangulation<double>(CDT::VertexInsertionOrder::Auto, CDT::IntersectingConstraintEdges::TryResolve, 3);
+}
 
 
 void HeightMapBuilder::load_contours(std::vector<LineFeature *> contours_){
@@ -9,14 +11,20 @@ void HeightMapBuilder::load_contours(std::vector<LineFeature *> contours_){
 
 void HeightMapBuilder::build() {
 
+	process_raw_contours();
+	triangulate();
+	
+	
+}
+
+void HeightMapBuilder::process_raw_contours() {
+
 	int id = 0;
 	for (auto & c : contours) {
 		ofPolyline line = c->get_line();
-		for (int i = 0; i < line.size(); i++ ) {
+		for (int i = 0; i < line.size(); i++) {
 
 			glm::vec2 p = line[i];
-
-			
 
 			demp * new_demp = new demp(p, c);
 			//demp * last = demps.back();
@@ -27,17 +35,9 @@ void HeightMapBuilder::build() {
 				constrained_edges.push_back(new demedge(demps.size() - 1, demps.size() - 2));
 				//std::cout << "edge from " << demps.size() - 1 << " to " << demps.size() - 2 << "\n";
 			}
-
-			
-			
-
 		}
 		id++;
 	}
-
-	triangulate();
-	
-	
 }
 
 void HeightMapBuilder::triangulate() {
@@ -65,6 +65,23 @@ void HeightMapBuilder::triangulate() {
 	//auto bounds = cdt.fixedEdges;
 
 	edges = CDT::extractEdgesFromTriangles(cdt.triangles);
+
+
+
+	for (auto & e : edges) {
+		CDT::VertInd i1 = e.v1();
+		CDT::VertInd i2 = e.v2();
+
+		if (i1 >= demps.size() || i2 >= demps.size()) {
+			continue; //extra vertices from crossed edges
+		}
+
+		demp * d1 = demps[i1];
+		demp * d2 = demps[i2];
+
+		tri_edges.push_back(new demedge(i1, i2, d1, d2));
+		
+	}
 }
 
 
@@ -83,19 +100,14 @@ void HeightMapBuilder::draw() {
 		
 		ofSetLineWidth(2);
 
-		for (auto& e : edges) {
-			CDT::VertInd i1 = e.v1();
-			CDT::VertInd i2 = e.v2();
+		for (auto& te : tri_edges) {
+			
 
-			demp* d1 = demps[i1];
-			demp* d2 = demps[i2];
-
-
-			glm::vec2 p1 = d1->pos;
-			glm::vec2 p2 = d2->pos;
+			demp * d1 = te->v1;
+			demp * d2 = te->v2;
 
 			ofSetColor((d1->contour == d2->contour)?ofColor::red : ofColor::green);
-			ofDrawLine(p1, p2);
+			ofDrawLine(d1->pos, d2->pos);
 			
 		}
 
@@ -104,7 +116,9 @@ void HeightMapBuilder::draw() {
 demp::demp(glm::vec2 pos_, LineFeature * contour_): pos(pos_), contour(contour_){
 }
 
-demedge::demedge(std::size_t v1_, std::size_t v2_) {
-	vertices.first = v1_;
-	vertices.second = v2_;
+demedge::demedge(std::size_t i1_, std::size_t i2_, demp* v1_, demp* v2_) {
+	vertices.first = i1_;
+	vertices.second = i2_;
+	v1 = v1_;
+	v2 = v2_;
 }
