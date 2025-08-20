@@ -14,8 +14,34 @@ void HeightMapBuilder::build() {
 	process_raw_contours();
 	triangulate();
 
-	int dir = demps[1]->slope_direction_by_vector(demps[3]->pos - demps[1]->pos);
-	std::cout << "Direction: " << dir << "\n";
+
+	for (auto& e : tri_edges) {
+		glm::vec2 p1 = e->v1->pos;
+		glm::vec2 p2 = e->v2->pos;
+
+		if (e->v1->contour == e->v2->contour) {
+			continue;
+		}
+
+		glm::vec2 v12 = p2 - p1;
+		glm::vec2 v21 = p1 - p2;
+
+		int slope1 = e->v1->slope_direction_by_vector(v12);
+		int slope2 = e->v2->slope_direction_by_vector(v21);
+
+		std::cout << slope1 << " " << slope2 << "\n";
+		std::cout << e->v2->lastV << " " << e->v2->nextV << " " << v21 << "\n\n";
+
+		if (slope1 == slope2) {
+			continue;
+		}
+
+		e->slope = slope1;
+
+	}
+
+	//int dir = demps[1]->slope_direction_by_vector(demps[3]->pos - demps[1]->pos);
+	//std::cout << "Direction: " << dir << "\n";
 	
 	
 }
@@ -112,7 +138,7 @@ void HeightMapBuilder::triangulate() {
 		demp * d2 = demps[i2];
 
 		if (d1->contour == d2->contour) {
-			continue;
+			continue; //skip self-connections?
 		}
 
 		tri_edges.push_back(new demedge(i1, i2, d1, d2));
@@ -142,7 +168,12 @@ void HeightMapBuilder::draw() {
 			demp * d1 = te->v1;
 			demp * d2 = te->v2;
 
-			ofSetColor((d1->contour == d2->contour)?ofColor::red : ofColor::green);
+			std::vector<ofColor> cols = {ofColor::red, ofColor::grey, ofColor::pink};
+			
+			ofSetColor(cols[te->slope+1]);
+
+
+			//ofSetColor((te->slope)?ofColor::red : ofColor::green);
 			ofDrawLine(d1->pos, d2->pos);
 			
 		}
@@ -159,8 +190,8 @@ void demp::calculate_slope_ranges(glm::vec2 last_, glm::vec2 next_) {
 	nextV = next - pos;
 	lastV = last - pos;
 
-	if (glm::distance2(last, pos) < 1) {lastV = -nextV;}
-	if (glm::distance2(next, pos) < 1) {nextV = -lastV;}
+	if (glm::distance2(last, pos) < 10) {lastV = -nextV;}
+	if (glm::distance2(next, pos) < 10) {nextV = -lastV;}
 
 
 }
@@ -173,12 +204,26 @@ int demp::slope_direction_by_vector(glm::vec2 vec) {
 	glm::vec2 N = vec;
 	glm::vec2 B = nextV;
 
+	//std::cout << A << N << B << "\n";
+
 	double AxN = cross2(A, N);
 	double AxB = cross2(A, B);
+	double NxB = cross2(N, B);
 	double BxN = cross2(B, N);
 	double BxA = cross2(B, A);
 
-	return (AxN * AxB >= 0 && BxN * BxA >= 0) ? 1 : -1;
+	if (AxB < 0) {
+		if (AxN < 0 && NxB < 0){return 1;}
+	}
+	else{
+		if (AxN > 0 && NxB > 0){return 1;}
+	}
+
+	return -1;
+
+	//return (AxN * AxB >= 0 && BxN * BxA >= 0) ? 1 : -1;
+
+
 
 	//-1: downhill
 	//+1: uphill
@@ -192,4 +237,5 @@ demedge::demedge(std::size_t i1_, std::size_t i2_, demp* v1_, demp* v2_) {
 	vertices.second = i2_;
 	v1 = v1_;
 	v2 = v2_;
+	slope = 0;
 }

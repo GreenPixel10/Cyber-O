@@ -22,6 +22,8 @@ class demp {
 
 		inline double cross2(glm::vec2 A, glm::vec2 B) { return (A.x * B.y) - (B.x * A.y); }
 
+
+
 		glm::vec2 pos;
 		LineFeature* contour;
 
@@ -41,6 +43,7 @@ class demedge {
 		std::pair<std::size_t, std::size_t> vertices;
 		demp* v1;
 		demp* v2;
+		int slope;
 };
 
 
