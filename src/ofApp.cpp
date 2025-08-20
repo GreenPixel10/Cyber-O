@@ -265,7 +265,7 @@ void ofApp::draw(){
 #define DRAW_MODE_SPECIFIED 2
 
 
-#define DRAW_MODE_MAP false
+#define DRAW_MODE_MAP true
 #define DRAW_MODE_DEM true
 
 	int draw_mode = DRAW_MODE_SPECIFIED;

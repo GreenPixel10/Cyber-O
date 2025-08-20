@@ -20,14 +20,16 @@ class demp {
 
 		int slope_direction_by_vector(glm::vec2 vec);
 
+		inline double cross2(glm::vec2 A, glm::vec2 B) { return (A.x * B.y) - (B.x * A.y); }
+
 		glm::vec2 pos;
 		LineFeature* contour;
 
 		glm::vec2 last;
 		glm::vec2 next;
 
-		glm::vec3 nextV;
-		glm::vec3 lastV;
+		glm::vec2 nextV;
+		glm::vec2 lastV;
 
 		std::vector<demp*> connections;
 

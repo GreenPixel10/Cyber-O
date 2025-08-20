@@ -156,8 +156,8 @@ void demp::calculate_slope_ranges(glm::vec2 last_, glm::vec2 next_) {
 	last = last_;
 	next = next_;
 
-	nextV = glm::vec3(next - pos, 0);
-	lastV = glm::vec3(last - pos, 0);
+	nextV = next - pos;
+	lastV = last - pos;
 
 	if (glm::distance2(last, pos) < 1) {lastV = -nextV;}
 	if (glm::distance2(next, pos) < 1) {nextV = -lastV;}
@@ -167,20 +167,22 @@ void demp::calculate_slope_ranges(glm::vec2 last_, glm::vec2 next_) {
 
 int demp::slope_direction_by_vector(glm::vec2 vec) {
 
-	glm::vec3 tri_edge_vec = glm::vec3(vec, 0);
 
-	
 
-	double AxB = glm::cross(lastV, tri_edge_vec).z;
-	double AxC = glm::cross(lastV, nextV).z;
-	double CxB = glm::cross(nextV, tri_edge_vec).z;
-	double CxA = glm::cross(nextV, lastV).z;
+	glm::vec2 A = lastV;
+	glm::vec2 N = vec;
+	glm::vec2 B = nextV;
 
-	if (AxB * AxC >= 0 && CxB * CxA >= 0) {
-		return 1;
-	}
+	double AxN = cross2(A, N);
+	double AxB = cross2(A, B);
+	double BxN = cross2(B, N);
+	double BxA = cross2(B, A);
 
-	return -1;
+	return (AxN * AxB >= 0 && BxN * BxA >= 0) ? 1 : -1;
+
+	//-1: downhill
+	//+1: uphill
+
 }
 
 
