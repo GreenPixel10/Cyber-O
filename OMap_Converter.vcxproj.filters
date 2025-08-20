@@ -18,6 +18,7 @@
     </ClCompile>
     <ClCompile Include="src\PointFeature.cpp" />
     <ClCompile Include="src\SlopeDetector.cpp" />
+    <ClCompile Include="src\HeightMapBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">
@@ -39,6 +40,7 @@
     </ClInclude>
     <ClInclude Include="src\PointFeature.h" />
     <ClInclude Include="src\SlopeDetector.h" />
+    <ClInclude Include="src\HeightMapBuilder.h" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="icon.rc" />

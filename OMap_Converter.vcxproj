@@ -82,7 +82,7 @@
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <WarningLevel>Level3</WarningLevel>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\Applications\OpenFrameworks\of_v0.12.1_vs_64_release\apps\myApps\OMap_Converter\CDT;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>CompileAsCpp</CompileAs>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <ObjectFileName>$(IntDir)\Build\%(RelativeDir)\$(Configuration)\</ObjectFileName>
@@ -233,7 +233,7 @@
     <ClCompile Include="src\PointFeature.cpp" />
     <ClCompile Include="src\SlopeDetector.cpp" />
     <ClCompile Include="src\SymbolManager.cpp" />
-	<ClCompile Include="src\HeightMapBuilder.cpp" />
+    <ClCompile Include="src\HeightMapBuilder.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Feature.h" />
@@ -242,7 +242,7 @@
     <ClInclude Include="src\PointFeature.h" />
     <ClInclude Include="src\SlopeDetector.h" />
     <ClInclude Include="src\SymbolManager.h" />
-	<ClInclude Include="src\HeightMapBuilder.h" />
+    <ClInclude Include="src\HeightMapBuilder.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(OF_ROOT)\libs\openFrameworksCompiled\project\vs\openframeworksLib.vcxproj">
