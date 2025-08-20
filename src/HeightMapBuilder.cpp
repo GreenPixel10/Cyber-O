@@ -9,6 +9,7 @@ void HeightMapBuilder::load_contours(std::vector<LineFeature *> contours_){
 
 void HeightMapBuilder::build() {
 
+	int id = 0;
 	for (auto & c : contours) {
 		ofPolyline line = c->get_line();
 		for (int i = 0; i < line.size(); i++ ) {
@@ -24,13 +25,14 @@ void HeightMapBuilder::build() {
 
 			if (i > 0) {
 				constrained_edges.push_back(new demedge(demps.size() - 1, demps.size() - 2));
-				std::cout << "edge from " << demps.size() - 1 << " to " << demps.size() - 2 << "\n";
+				//std::cout << "edge from " << demps.size() - 1 << " to " << demps.size() - 2 << "\n";
 			}
 
 			
 			
 
 		}
+		id++;
 	}
 
 	triangulate();
@@ -77,20 +79,22 @@ void HeightMapBuilder::draw() {
 			ofDrawCircle(d->pos.x, d->pos.y, 150);
 		}
 
-		ofSetColor(ofColor::green);
+		
+		
 		ofSetLineWidth(2);
 
 		for (auto& e : edges) {
 			CDT::VertInd i1 = e.v1();
 			CDT::VertInd i2 = e.v2();
 
-			auto v1 = cdt.vertices[i1];
-			auto v2 = cdt.vertices[i2];
+			demp* d1 = demps[i1];
+			demp* d2 = demps[i2];
 
-			glm::vec2 p1 = demps[i1]->pos;
-			glm::vec2 p2 = demps[i2]->pos;
 
-			
+			glm::vec2 p1 = d1->pos;
+			glm::vec2 p2 = d2->pos;
+
+			ofSetColor((d1->contour == d2->contour)?ofColor::red : ofColor::green);
 			ofDrawLine(p1, p2);
 			
 		}
