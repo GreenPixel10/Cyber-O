@@ -30,7 +30,7 @@ void HeightMapBuilder::build() {
 		int slope2 = e->v2->slope_direction_by_vector(v21);
 
 		std::cout << slope1 << " " << slope2 << "\n";
-		std::cout << e->v2->lastV << " " << e->v2->nextV << " " << v21 << "\n\n";
+		//std::cout << e->v2->lastV << " " << e->v2->nextV << " " << v21 << "\n\n";
 
 		if (slope1 == slope2) {
 			continue;
@@ -40,8 +40,6 @@ void HeightMapBuilder::build() {
 
 	}
 
-	//int dir = demps[1]->slope_direction_by_vector(demps[3]->pos - demps[1]->pos);
-	//std::cout << "Direction: " << dir << "\n";
 	
 	
 }
@@ -204,26 +202,25 @@ int demp::slope_direction_by_vector(glm::vec2 vec) {
 	glm::vec2 N = vec;
 	glm::vec2 B = nextV;
 
-	//std::cout << A << N << B << "\n";
+	float Aa = atan2(A.y, A.x) ;
+	float Na = atan2(N.y, N.x);
+	float Ba = atan2(B.y, B.x);
 
-	double AxN = cross2(A, N);
-	double AxB = cross2(A, B);
-	double NxB = cross2(N, B);
-	double BxN = cross2(B, N);
-	double BxA = cross2(B, A);
 
-	if (AxB < 0) {
-		if (AxN < 0 && NxB < 0){return 1;}
+	if (Aa > Ba) { //make sure A is positive
+		Aa -= TWO_PI;
 	}
-	else{
-		if (AxN > 0 && NxB > 0){return 1;}
-	}
+	
+	bool ok = (Na > Aa && Na < Ba);
 
-	return -1;
+	Na -= TWO_PI;
 
-	//return (AxN * AxB >= 0 && BxN * BxA >= 0) ? 1 : -1;
+	bool ok2 = (Na > Aa && Na < Ba);
 
+	//std::cout << Aa << " " << Na << " " << Ba << "\n";
+	//std::cout << (ok||ok2 ? "Uphill" : "Downhill") << "\n\n";
 
+	return (ok || ok2) ? 1 : -1;
 
 	//-1: downhill
 	//+1: uphill
