@@ -16,8 +16,18 @@ class demp {
 		inline double get_x(){return pos.x;};
 		inline double get_y(){return pos.y;};
 
+		void calculate_slope_ranges(glm::vec2 last_, glm::vec2 next_);
+
+		int slope_direction_by_vector(glm::vec2 vec);
+
 		glm::vec2 pos;
 		LineFeature* contour;
+
+		glm::vec2 last;
+		glm::vec2 next;
+
+		glm::vec3 nextV;
+		glm::vec3 lastV;
 
 		std::vector<demp*> connections;
 

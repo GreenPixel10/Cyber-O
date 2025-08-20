@@ -13,6 +13,9 @@ void HeightMapBuilder::build() {
 
 	process_raw_contours();
 	triangulate();
+
+	int dir = demps[1]->slope_direction_by_vector(demps[3]->pos - demps[1]->pos);
+	std::cout << "Direction: " << dir << "\n";
 	
 	
 }
@@ -24,16 +27,44 @@ void HeightMapBuilder::process_raw_contours() {
 		ofPolyline line = c->get_line();
 		for (int i = 0; i < line.size(); i++) {
 
+
+			glm::vec2 last;
+			glm::vec2 next;
 			glm::vec2 p = line[i];
 
+			if (i == 0) {
+				if (c->get_closed()) {
+					last = line[line.size() - 1];
+				}
+				else {
+					last = p;
+				}
+			}
+			else {
+				last = line[i - 1];
+			}
+
+
+
+			if (i == line.size() - 1) {
+				if (c->get_closed()) {
+					next = line[0];
+				} else {
+					next = p;
+				}
+			}
+			else {
+				next = line[i+1];
+			}
+
+
 			demp * new_demp = new demp(p, c);
-			//demp * last = demps.back();
+			new_demp->calculate_slope_ranges(last, next);
 
 			demps.push_back(new_demp);
 
 			if (i > 0) {
 				constrained_edges.push_back(new demedge(demps.size() - 1, demps.size() - 2));
-				//std::cout << "edge from " << demps.size() - 1 << " to " << demps.size() - 2 << "\n";
 			}
 		}
 		id++;
@@ -76,8 +107,13 @@ void HeightMapBuilder::triangulate() {
 			continue; //extra vertices from crossed edges
 		}
 
+
 		demp * d1 = demps[i1];
 		demp * d2 = demps[i2];
+
+		if (d1->contour == d2->contour) {
+			continue;
+		}
 
 		tri_edges.push_back(new demedge(i1, i2, d1, d2));
 		
@@ -115,6 +151,39 @@ void HeightMapBuilder::draw() {
 
 demp::demp(glm::vec2 pos_, LineFeature * contour_): pos(pos_), contour(contour_){
 }
+
+void demp::calculate_slope_ranges(glm::vec2 last_, glm::vec2 next_) {
+	last = last_;
+	next = next_;
+
+	nextV = glm::vec3(next - pos, 0);
+	lastV = glm::vec3(last - pos, 0);
+
+	if (glm::distance2(last, pos) < 1) {lastV = -nextV;}
+	if (glm::distance2(next, pos) < 1) {nextV = -lastV;}
+
+
+}
+
+int demp::slope_direction_by_vector(glm::vec2 vec) {
+
+	glm::vec3 tri_edge_vec = glm::vec3(vec, 0);
+
+	
+
+	double AxB = glm::cross(lastV, tri_edge_vec).z;
+	double AxC = glm::cross(lastV, nextV).z;
+	double CxB = glm::cross(nextV, tri_edge_vec).z;
+	double CxA = glm::cross(nextV, lastV).z;
+
+	if (AxB * AxC >= 0 && CxB * CxA >= 0) {
+		return 1;
+	}
+
+	return -1;
+}
+
+
 
 demedge::demedge(std::size_t i1_, std::size_t i2_, demp* v1_, demp* v2_) {
 	vertices.first = i1_;
