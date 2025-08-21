@@ -19,6 +19,21 @@ void SlopeDetector::detect_slope() {
 	repair_contours();
 	align_contours();
 
+	int a = 0;
+	int b = 0;
+
+	for (auto& c : contours) {
+		if (c->get_link_next().size() == 1) {
+			a++;
+		}
+		if (c->get_link_next().size() > 1) {
+			b++;
+			//c->linked_references.clear();
+		}
+	}
+
+	std::cout << "links: " << a << " " << b << "\n";
+
 	slope_from_directional_points();
 	slope_from_directional_linears();
 	apply_contour_leaners();
@@ -183,7 +198,7 @@ void SlopeDetector::repair_contours() {
 void SlopeDetector::align_contours() {
 
 
-	#define CONTOUR_ALIGNMENT_RUNAWAY 125
+	#define CONTOUR_ALIGNMENT_RUNAWAY 50
 
 	int h = 0;
 	int runaway = 1;

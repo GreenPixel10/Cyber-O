@@ -98,7 +98,7 @@ class HeightMapBuilder {
 		void triangulate();
 		void calculate_slopes();
 		void generate_confidence_graph();
-		void bottleneck();
+		simpleContour * bottleneck();
 
 		void draw_triangulation();
 		void draw_DEM();

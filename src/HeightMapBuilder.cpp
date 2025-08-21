@@ -1,14 +1,16 @@
 #include "HeightMapBuilder.h"
 
 HeightMapBuilder::HeightMapBuilder(){
-	cdt = CDT::Triangulation<double>(CDT::VertexInsertionOrder::Auto, CDT::IntersectingConstraintEdges::TryResolve, 3);
+	cdt = CDT::Triangulation<double>(CDT::VertexInsertionOrder::Auto, CDT::IntersectingConstraintEdges::TryResolve, 1);
 }
 
 
 void HeightMapBuilder::load_contours(std::vector<LineFeature *> contours_){
 	//contours = contours_;
 	for (auto& c : contours_) {
-		simple_contours.push_back(new simpleContour(c));
+			simple_contours.push_back(new simpleContour(c));
+		
+		
 	}
 
 }
@@ -16,12 +18,18 @@ void HeightMapBuilder::load_contours(std::vector<LineFeature *> contours_){
 void HeightMapBuilder::build() {
 
 	process_raw_contours();
-	triangulate();
-	calculate_slopes();
-	generate_confidence_graph();
-	bottleneck();
 
-	simpleContour* origin = simple_contours[0];
+	triangulate();
+	
+	calculate_slopes();
+	
+	generate_confidence_graph();
+	
+	simpleContour * origin = bottleneck();
+
+	std::cout << "propagate\n";
+
+	//simpleContour* origin = simple_contours[50];
 	origin->elevation = 0;
 	origin->propagate_elevation();
 
@@ -30,14 +38,17 @@ void HeightMapBuilder::build() {
 	int lowest = INT_MAX;
 	int highest = INT_MIN;
 
+	int count = 0;
 	for (auto & c : simple_contours) {
-
+		if (c->elevation == -6969) {count++; continue;}
 		lowest = std::min(lowest, c->elevation);
-		
+		highest = std::max(highest, c->elevation);
 
 	}
+	std::cout << "error: " << count << "\n";
+	std::cout << lowest << " -> " << highest << "\n";
 
-
+	highest = INT_MIN;
 	for (auto & c : simple_contours) {
 
 		c->elevation += (- lowest);
@@ -45,8 +56,12 @@ void HeightMapBuilder::build() {
 	}
 
 	float col_scale = 255.0f/(float)highest;
-
+	std::cout << highest << "m\n";
 	for (auto & c : simple_contours) {
+		if (c->elevation == -6969) {
+			c->contour->set_colour(ofColor::red);
+			continue;
+		}
 		ofColor height = ofColor(c->elevation * col_scale, 175, c->elevation * col_scale);
 		c->contour->set_colour(height);
 	}
@@ -90,11 +105,19 @@ void HeightMapBuilder::process_raw_contours() {
 				next = line[i+1];
 			}
 
+			bool exists = false;
+			for (auto& d : demps) {
+				if (d->get_x() == p.x && d->get_y() == p.y) {
+					exists = true;
+					break;
+				}
+			}
+			if (exists) { continue;}
 
 			demp * new_demp = new demp(p, c);
 			new_demp->calculate_slope_ranges(last, next);
-
 			demps.push_back(new_demp);
+
 
 			if (i > 0) {
 				constrained_edges.push_back(new demedge(demps.size() - 1, demps.size() - 2));
@@ -106,14 +129,16 @@ void HeightMapBuilder::process_raw_contours() {
 
 void HeightMapBuilder::triangulate() {
 
-	
-	
+
+
+
+	std::cout << "inserting vertices\n";
 	cdt.insertVertices(demps.begin(), demps.end(),
 		[](const demp* p) { return p->pos.x; },
 		[](const demp* p){ return p->pos.y; }
 	);
 
-	
+	std::cout << "inserting edges\n";
 	cdt.insertEdges(
 		constrained_edges.begin(),
 		constrained_edges.end(),
@@ -121,17 +146,18 @@ void HeightMapBuilder::triangulate() {
 		[](const demedge * e) { return e->vertices.second; }
 	);
 	
-	
+	std::cout << "erasing supertriangle\n";
 	cdt.eraseSuperTriangle();
 
 	//auto tris = cdt.triangles;
 	//auto verts = cdt.vertices;
 	//auto bounds = cdt.fixedEdges;
 
+	std::cout << "extracting edges\n";
 	edges = CDT::extractEdgesFromTriangles(cdt.triangles);
 
 
-
+	std::cout << "gen connections\n";
 	for (auto & e : edges) {
 		CDT::VertInd i1 = e.v1();
 		CDT::VertInd i2 = e.v2();
@@ -159,6 +185,7 @@ void HeightMapBuilder::triangulate() {
 }
 
 void HeightMapBuilder::calculate_slopes() {
+	std::cout << "calculate slopes\n";
 	for (auto & e : tri_edges) {
 		glm::vec2 p1 = e->v1->pos;
 		glm::vec2 p2 = e->v2->pos;
@@ -183,6 +210,7 @@ void HeightMapBuilder::calculate_slopes() {
 }
 
 void HeightMapBuilder::generate_confidence_graph() {
+	std::cout << "gen confidence graph\n";
 	for (auto & c : simple_contours) {
 		for (auto & d : demps) {
 			for (auto & e : d->connections) {
@@ -219,13 +247,13 @@ void HeightMapBuilder::generate_confidence_graph() {
 		}
 	}
 
-	/*
+	std::cout << "sort confidence conenctions\n";
 	for (auto & c : simple_contours) {
 		std::sort(c->links.begin(), c->links.end(), [](auto & left, auto & right) {
 			return abs(left->confidence) > abs(right->confidence);
 		});
 	}
-	*/
+	
 
 	/*
 	std::cout << simple_contours[0]->contour->get_debug() << "\n";
@@ -235,11 +263,36 @@ void HeightMapBuilder::generate_confidence_graph() {
 	*/
 }
 
-void HeightMapBuilder::bottleneck() {
+simpleContour * HeightMapBuilder::bottleneck() {
 
+	std::cout << "bottleneck pathfinding\n";
+	simpleContour * source = nullptr;
 
+	for (auto & find_strongest : simple_contours) {
+		if (!source) {
+			source = find_strongest;
+			continue;
+		}
 
-	simpleContour * source = simple_contours[0];
+		link * potential_link = find_strongest->get_best_unvisited_link();
+		link * strongest_link = source->get_best_unvisited_link();
+
+		if (!strongest_link) {
+			source = find_strongest;
+			continue;
+		}
+
+		if (!potential_link) {
+			continue;
+		}
+
+		if (potential_link->confidence > strongest_link->confidence) {
+			source = find_strongest;
+		}
+	}
+	if (!source) {
+		std::cout << "uhoh2\n";
+	}
 	source->confidence_distance = INT_MAX;
 	while (true) {
 		simpleContour * current = nullptr;
@@ -275,6 +328,7 @@ void HeightMapBuilder::bottleneck() {
 		current->visited = true;
 	}
 
+	std::cout << "reversing links to generate a tree\n";
 
 	//reverse links;
 	for (auto & sc : simple_contours) {
@@ -283,12 +337,9 @@ void HeightMapBuilder::bottleneck() {
 		}
 	}
 
-	for (int p = 0; p < 5; p++) {
 
-		for (auto & test : simple_contours[p]->next) {
-			//std::cout << simple_contours[p]->contour->get_debug() << " " << test->contour->get_debug() << "\n";
-		}
-	}
+	return source;
+	
 	
 }
 
@@ -296,7 +347,7 @@ void HeightMapBuilder::bottleneck() {
 
 
 void HeightMapBuilder::draw_triangulation() {
-
+		
 		ofSetColor(ofColor::purple);
 
 		for (auto & d : demps) {
@@ -419,6 +470,7 @@ link * simpleContour::get_best_unvisited_link() {
 			return l;
 		}
 	}
+	return nullptr;
 }
 
 void simpleContour::propagate_elevation() {

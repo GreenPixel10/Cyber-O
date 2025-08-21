@@ -91,6 +91,7 @@ class LineFeature : public Feature {
 		bool linked_flag;
 
 		int elevation = INT_MIN;
+		std::vector<LineFeature *> linked_references;
 
 	private:
 		std::vector<LinePoint> points; //raw data
@@ -103,7 +104,7 @@ class LineFeature : public Feature {
 		bool slope_verified;
 		int slope_leaner; //negative means probably WRONG, positive means probably RIGHT
 
-		std::vector<LineFeature*> linked_references;
+		
 		bool all_links_gathered;
 
 
