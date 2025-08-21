@@ -90,7 +90,6 @@ class LineFeature : public Feature {
 		bool is_aligned();
 		bool linked_flag;
 
-		std::map<int, int> elevation_possibilities;
 		int elevation = INT_MIN;
 
 	private:

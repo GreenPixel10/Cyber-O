@@ -11,12 +11,12 @@ void ofApp::setup() {
 	//load_map("D:/Projects/OrienteeringSim/CampFortuneSmall.omap");
 
 
-	//load_map("D:/Projects/OrienteeringSim/Barrens.omap");
+	load_map("D:/Projects/OrienteeringSim/Barrens.omap");
 	//load_map("D:/Projects/OrienteeringSim/Cite.omap");
 	//load_map("D:/Projects/OrienteeringSim/Green.omap");
 
 	
-	load_map("D:/Projects/OrienteeringSim/test2.omap");
+	//load_map("D:/Projects/OrienteeringSim/test2.omap");
 
 	//load_map("D:/Projects/OrienteeringSim/forest.omap");
 

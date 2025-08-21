@@ -44,7 +44,12 @@ void HeightMapBuilder::build() {
 		highest = std::max(highest, c->elevation);
 	}
 
-	std::cout << highest << "\n";
+	float col_scale = 255.0f/(float)highest;
+
+	for (auto & c : simple_contours) {
+		ofColor height = ofColor(c->elevation * col_scale, 175, c->elevation * col_scale);
+		c->contour->set_colour(height);
+	}
 	
 }
 
