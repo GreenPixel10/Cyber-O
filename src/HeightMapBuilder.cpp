@@ -20,23 +20,59 @@ void HeightMapBuilder::build() {
 	calculate_slopes();
 	generate_confidence_graph();
 
+
+
+
+
 	return;
+
 	simpleContour* source = simple_contours[0];
 	source->confidence_distance = 0;
 	while (true) {
 		simpleContour * current = nullptr;
 		for (auto & find_nearest : simple_contours) {
-			if (!current || find_nearest->confidence_distance < current->confidence_distance) {
+			bool is_unvisited = !find_nearest->visited;
+			bool is_closer = !current || (find_nearest->confidence_distance < current->confidence_distance);
+			
+			if (is_unvisited && is_closer) {
 				current = find_nearest;
 			}
 		}
 		if (!current) {break;} //done
 
-		for (auto& l : current->links) {
+		std::cout << "Setting current to " << current->contour->get_debug() << "\n";
 
+		for (auto& l : current->links) {
+			if (l->link_to->visited) { continue;}
+			std::cout << "	testing " << l->link_to->contour->get_debug() << "\n";
+			int con = current->confidence_distance + (1000 - l->confidence);
+			int next_con = l->link_to->confidence_distance;
+			std::cout << "		Current: " << con << " Next:" << next_con << "\n";
+			if (con < next_con) {
+				l->link_to->confidence_distance = con;
+				l->link_to->prev = current;
+				std::cout << "			linked " << l->link_to->contour->get_debug() << " back to " << current->contour->get_debug() << "\n";
+			}
 		}
+
+		current->visited = true;
 	}
 
+
+	for (auto & sc : simple_contours) {
+		if (sc->prev) {
+			sc->prev->next.push_back(sc);
+		}
+		
+	}
+
+	for (int p = 0; p < 5; p++) {
+		
+			for (auto & test : simple_contours[p]->next) { 
+			std::cout << simple_contours[p]->contour->get_debug() << " " << test->contour->get_debug() << "\n";
+		}
+	}
+	
 
 	
 	
@@ -327,7 +363,7 @@ void demp::propagate() {
 }
 
 simpleContour::simpleContour(LineFeature * lf):
-	contour(lf), visited(false), confidence_distance(INT_MAX){}
+	contour(lf), visited(false), confidence_distance(INT_MAX), prev(nullptr){}
 
 link* simpleContour::get_link_by_contour(simpleContour * target) {
 	for (auto& l : links) {

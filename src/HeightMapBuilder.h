@@ -78,6 +78,9 @@ class simpleContour {
 
 		bool visited;
 
+		simpleContour* prev;
+		std::vector<simpleContour*> next;
+
 		int confidence_distance;
 };
 
