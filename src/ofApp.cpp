@@ -8,7 +8,7 @@ void ofApp::setup() {
 	init_camera();
 
 
-	load_map("D:/Projects/OrienteeringSim/CampFortuneSmall.omap");
+	//load_map("D:/Projects/OrienteeringSim/CampFortuneSmall.omap");
 
 
 	//load_map("D:/Projects/OrienteeringSim/Barrens.omap");
@@ -16,7 +16,7 @@ void ofApp::setup() {
 	//load_map("D:/Projects/OrienteeringSim/Green.omap");
 
 	
-	//load_map("D:/Projects/OrienteeringSim/test2.omap");
+	load_map("D:/Projects/OrienteeringSim/test2.omap");
 
 	//load_map("D:/Projects/OrienteeringSim/forest.omap");
 

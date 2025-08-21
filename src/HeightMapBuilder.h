@@ -75,6 +75,7 @@ class simpleContour {
 
 		link * get_link_by_contour(simpleContour * target);
 		link * get_best_unvisited_link();
+		void propagate_elevation();
 
 		bool visited;
 
@@ -82,6 +83,8 @@ class simpleContour {
 		std::vector<simpleContour*> next;
 
 		int confidence_distance;
+
+		int elevation;
 };
 
 class HeightMapBuilder {

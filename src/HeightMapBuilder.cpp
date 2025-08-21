@@ -21,12 +21,30 @@ void HeightMapBuilder::build() {
 	generate_confidence_graph();
 	bottleneck();
 
+	simpleContour* origin = simple_contours[0];
+	origin->elevation = 0;
+	origin->propagate_elevation();
+
+	std::cout << "\n";
+
+	int lowest = INT_MAX;
+	int highest = INT_MIN;
+
+	for (auto & c : simple_contours) {
+
+		lowest = std::min(lowest, c->elevation);
+		
+
+	}
 
 
+	for (auto & c : simple_contours) {
 
-	
+		c->elevation += (- lowest);
+		highest = std::max(highest, c->elevation);
+	}
 
-	
+	std::cout << highest << "\n";
 	
 }
 
@@ -379,7 +397,7 @@ void demp::propagate() {
 }
 
 simpleContour::simpleContour(LineFeature * lf):
-	contour(lf), visited(false), confidence_distance(0), prev(nullptr){}
+	contour(lf), visited(false), confidence_distance(0), prev(nullptr), elevation(-6969){}
 
 link* simpleContour::get_link_by_contour(simpleContour * target) {
 	for (auto& l : links) {
@@ -395,6 +413,29 @@ link * simpleContour::get_best_unvisited_link() {
 		if (!l->link_to->visited) {
 			return l;
 		}
+	}
+}
+
+void simpleContour::propagate_elevation() {
+	for (auto& next_contour : next) {
+
+
+		link* link_with_slope_info = get_link_by_contour(next_contour);
+		int raw_slope = link_with_slope_info->slope;
+		int confidence = link_with_slope_info->confidence;
+		simpleContour * link_to = link_with_slope_info->link_to;
+
+		if (abs(raw_slope) <= confidence / 2) {
+			link_to->elevation = elevation;
+		}
+		else if (raw_slope < 0) {
+			link_to->elevation = elevation - 1;
+		}
+		else if (raw_slope > 0) {
+			link_to->elevation = elevation + 1;
+		}
+
+		link_to->propagate_elevation();
 	}
 }
 
