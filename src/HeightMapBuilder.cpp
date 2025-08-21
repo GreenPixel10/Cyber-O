@@ -18,47 +18,23 @@ void HeightMapBuilder::build() {
 	process_raw_contours();
 	triangulate();
 	calculate_slopes();
+	generate_confidence_graph();
 
-	for (auto& c : simple_contours) {
-		for (auto& d : demps) {
-			for (auto & e : d->connections) {
-				if (e->v1->contour != c && e->v2->contour != c) {
-					continue;
-				}
-				
-				simpleContour* connected_to = nullptr;
-				int slope = 0;
-				if (e->v1 == d) {
-					connected_to = e->v2->contour;
-					slope = e->slope;
-				}
-				if (e->v2 == d) {
-					connected_to = e->v1->contour;
-					slope = -(e->slope);
-				}
-
-				link * new_link = c->get_link_by_contour(connected_to);
-				if (new_link == nullptr) {
-					c->links.push_back(new link(connected_to, 1, slope));
-				} else {
-					new_link->slope += slope;
-					new_link->confidence++;
-				}
+	return;
+	simpleContour* source = simple_contours[0];
+	source->confidence_distance = 0;
+	while (true) {
+		simpleContour * current = nullptr;
+		for (auto & find_nearest : simple_contours) {
+			if (!current || find_nearest->confidence_distance < current->confidence_distance) {
+				current = find_nearest;
 			}
 		}
-	}
+		if (!current) {break;} //done
 
-	for (auto & c : simple_contours) {
-		std::sort(c->links.begin(), c->links.end(), [](auto & left, auto & right) {
-			return abs(left->confidence) < abs(right->confidence);
-		});
-		c->links.pop_back();
-		std::reverse(c->links.begin(), c->links.end());
-	}
+		for (auto& l : current->links) {
 
-	std::cout << simple_contours[1]->contour->get_debug() << "\n";
-	for (auto& test : simple_contours[1]->links) {
-		std::cout << test->link_to->contour->get_debug() << " " << test->confidence << " " << test->slope << "\n";
+		}
 	}
 
 
@@ -186,8 +162,6 @@ void HeightMapBuilder::calculate_slopes() {
 		int slope1 = e->v1->slope_direction_by_vector(v12);
 		int slope2 = e->v2->slope_direction_by_vector(v21);
 
-		std::cout << slope1 << " " << slope2 << "\n";
-		//std::cout << e->v2->lastV << " " << e->v2->nextV << " " << v21 << "\n\n";
 
 		if (slope1 == slope2) {
 			continue;
@@ -195,6 +169,52 @@ void HeightMapBuilder::calculate_slopes() {
 
 		e->slope = slope1;
 	}
+}
+
+void HeightMapBuilder::generate_confidence_graph() {
+	for (auto & c : simple_contours) {
+		for (auto & d : demps) {
+			for (auto & e : d->connections) {
+				if (e->v1->contour != c && e->v2->contour != c) {
+					continue;
+				}
+
+				if (e->v1->contour == c && e->v2->contour == c) {
+					continue;
+				}
+
+				
+
+				simpleContour * connected_to = nullptr;
+				int slope = 0;
+				if (e->v1->contour == c) {
+					connected_to = e->v2->contour;
+					slope = e->slope;
+				}
+				if (e->v2->contour == c) {
+					connected_to = e->v1->contour;
+					slope = -(e->slope);
+				}
+
+				link * new_link = c->get_link_by_contour(connected_to);
+				if (new_link == nullptr) {
+					c->links.push_back(new link(connected_to, 1, slope));
+					//std::cout << c->contour->get_debug() << " " << connected_to->contour->get_debug() << "\n";
+				} else {
+					new_link->slope += slope;
+					new_link->confidence++;
+				}
+			}
+		}
+	}
+
+
+	/*
+	std::cout << simple_contours[1]->contour->get_debug() << "\n";
+	for (auto & test : simple_contours[1]->links) {
+		std::cout << test->link_to->contour->get_debug() << " " << test->confidence << " " << test->slope << "\n";
+	}
+	*/
 }
 
 
@@ -306,8 +326,8 @@ void demp::propagate() {
 	}
 }
 
-simpleContour::simpleContour(LineFeature * lf): contour(lf){
-}
+simpleContour::simpleContour(LineFeature * lf):
+	contour(lf), visited(false), confidence_distance(INT_MAX){}
 
 link* simpleContour::get_link_by_contour(simpleContour * target) {
 	for (auto& l : links) {
@@ -316,6 +336,14 @@ link* simpleContour::get_link_by_contour(simpleContour * target) {
 		}
 	}
 	return nullptr;
+}
+
+link * simpleContour::get_best_unvisited_link() {
+	for (auto& l : links) {
+		if (!l->link_to->visited) {
+			return l;
+		}
+	}
 }
 
 link::link(simpleContour * link_to_, int confidence_, int slope_): link_to(link_to_), confidence(confidence_), slope(slope_) {

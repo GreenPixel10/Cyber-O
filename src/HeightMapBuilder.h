@@ -74,6 +74,11 @@ class simpleContour {
 		std::vector<link*> links;
 
 		link * get_link_by_contour(simpleContour * target);
+		link * get_best_unvisited_link();
+
+		bool visited;
+
+		int confidence_distance;
 };
 
 class HeightMapBuilder {
@@ -85,6 +90,7 @@ class HeightMapBuilder {
 		void process_raw_contours();
 		void triangulate();
 		void calculate_slopes();
+		void generate_confidence_graph();
 		void draw_triangulation();
 		void draw_DEM();
 
