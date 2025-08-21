@@ -24,15 +24,14 @@ void HeightMapBuilder::build() {
 
 
 
-	return;
 
 	simpleContour* source = simple_contours[0];
-	source->confidence_distance = 0;
+	source->confidence_distance = INT_MAX;
 	while (true) {
 		simpleContour * current = nullptr;
 		for (auto & find_nearest : simple_contours) {
 			bool is_unvisited = !find_nearest->visited;
-			bool is_closer = !current || (find_nearest->confidence_distance < current->confidence_distance);
+			bool is_closer = !current || (find_nearest->confidence_distance > current->confidence_distance);
 			
 			if (is_unvisited && is_closer) {
 				current = find_nearest;
@@ -45,11 +44,11 @@ void HeightMapBuilder::build() {
 		for (auto& l : current->links) {
 			if (l->link_to->visited) { continue;}
 			std::cout << "	testing " << l->link_to->contour->get_debug() << "\n";
-			int con = current->confidence_distance + (1000 - l->confidence);
-			int next_con = l->link_to->confidence_distance;
+			int con = current->confidence_distance;
+			int next_con = std::min(con, l->confidence);
 			std::cout << "		Current: " << con << " Next:" << next_con << "\n";
-			if (con < next_con) {
-				l->link_to->confidence_distance = con;
+			if (next_con > l->link_to->confidence_distance) {
+				l->link_to->confidence_distance = next_con;
 				l->link_to->prev = current;
 				std::cout << "			linked " << l->link_to->contour->get_debug() << " back to " << current->contour->get_debug() << "\n";
 			}
@@ -244,10 +243,17 @@ void HeightMapBuilder::generate_confidence_graph() {
 		}
 	}
 
+	/*
+	for (auto & c : simple_contours) {
+		std::sort(c->links.begin(), c->links.end(), [](auto & left, auto & right) {
+			return abs(left->confidence) > abs(right->confidence);
+		});
+	}
+	*/
 
 	/*
-	std::cout << simple_contours[1]->contour->get_debug() << "\n";
-	for (auto & test : simple_contours[1]->links) {
+	std::cout << simple_contours[0]->contour->get_debug() << "\n";
+	for (auto & test : simple_contours[0]->links) {
 		std::cout << test->link_to->contour->get_debug() << " " << test->confidence << " " << test->slope << "\n";
 	}
 	*/
@@ -363,7 +369,7 @@ void demp::propagate() {
 }
 
 simpleContour::simpleContour(LineFeature * lf):
-	contour(lf), visited(false), confidence_distance(INT_MAX), prev(nullptr){}
+	contour(lf), visited(false), confidence_distance(0), prev(nullptr){}
 
 link* simpleContour::get_link_by_contour(simpleContour * target) {
 	for (auto& l : links) {
