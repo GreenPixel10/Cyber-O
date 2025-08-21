@@ -90,10 +90,13 @@ class HeightMapBuilder {
 		HeightMapBuilder();
 		void load_contours(std::vector<LineFeature *> contours_);
 		void build();
+
 		void process_raw_contours();
 		void triangulate();
 		void calculate_slopes();
 		void generate_confidence_graph();
+		void bottleneck();
+
 		void draw_triangulation();
 		void draw_DEM();
 
