@@ -23,12 +23,11 @@ void SlopeDetector::detect_slope() {
 	int b = 0;
 
 	for (auto& c : contours) {
-		if (c->get_link_next().size() == 1) {
+		if (c->link_next.size() <= 1 && c->link_prev.size() <= 1 && !(c->link_next.size() == 0 && c->link_prev.size() == 0)) {
 			a++;
 		}
-		if (c->get_link_next().size() > 1) {
+		else if (c->link_next.size() > 1 || c->link_prev.size() > 1) {
 			b++;
-			//c->linked_references.clear();
 		}
 	}
 

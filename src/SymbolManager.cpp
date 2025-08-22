@@ -21,7 +21,7 @@ SymbolManager::SymbolManager() {
 	//symbol_names[S_INDEX_CONTOUR] = { "Index contour", "Index Contour" };
 	symbol_names[S_CLIFF] = { "Cliff", "Cliff, with tags", "Passable rock face" };
 	symbol_names[S_MIN_CLIFF] = { "Cliff (Minimum)", "Cliff, with tags, minimum size", "Passable rock face, minimum size" };
-	symbol_names[S_SLOPE_TAG] = { "Slope line, contour", "Slope Line for Contour" };
+	symbol_names[S_SLOPE_TAG] = { "Slope line, contour", "Slope Line for Contour", "Slope line" };
 	symbol_names[S_IMPASSABLE_CLIFF] = { "Impassable cliff"};
 	symbol_names[S_IMPASSABLE_MIN_CLIFF] = { "Impassable cliff, minimum size"};
 	symbol_names[S_EARTH_BANK] = { "Earth bank" };
