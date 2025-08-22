@@ -23,8 +23,7 @@ class SlopeDetector {
 		void cast_contours();
 		void detect_slope();
 		void set_debug_colours();
-		void repair_contours();
-		void align_contours();
+		void simple_repair_contours();
 		void slope_from_directional_points(); //eg. slope tags
 		void slope_from_directional_linears(); //eg. long cliffs
 		void slope_from_closed_loops(); //eg. hilltops

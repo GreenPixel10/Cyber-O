@@ -45,7 +45,6 @@ class LineFeature : public Feature {
 		bool get_closed_via_linked();
 		bool is_facing_outwards();
 
-		void align_linked();
 		inline void set_linked_flag(bool set) { linked_flag = set;}
 
 		inline bool get_slope_verified() { return slope_verified; }
@@ -57,13 +56,8 @@ class LineFeature : public Feature {
 		int get_length_at_point(glm::vec2 point);
 		inline int get_length_at_point(glm::vec3 point) {return get_length_at_point(glm::vec2(point.x, point.y));};
 
-		inline void add_link_prev(std::pair<LineFeature *, bool> lf) { link_prev.push_back(lf); }
-		inline void add_link_next(std::pair<LineFeature *, bool> lf) { link_next.push_back(lf); }
-		inline vector<std::pair<LineFeature *, bool>> get_link_prev() { return link_prev; }
-		inline vector<std::pair<LineFeature *, bool>> get_link_next() { return link_next; }
 
-		void store_all_links();
-		std::vector<LineFeature *> traverse_link_chain();
+
 		inline void add_linked_reference(LineFeature * lf) { if(lf!=this){linked_references.push_back(lf);} }
 		inline bool are_all_links_gathered() { return all_links_gathered;}
 		inline void set_all_links_gathered(bool b) { all_links_gathered = b; }
@@ -72,7 +66,6 @@ class LineFeature : public Feature {
 		void construct_polyline();
 		void draw();
 
-		void slope_alignment_reversal(LineFeature * origin = nullptr, LineFeature * last = nullptr, int lazy_depth = 0);
 		void reverse_single_slope();
 		void reverse_all_linked_slopes();
 
@@ -84,8 +77,16 @@ class LineFeature : public Feature {
 		Point min_coords;
 		Point max_coords;
 
-		std::vector<std::pair<LineFeature *, bool>> link_next;
-		std::vector<std::pair<LineFeature *, bool>> link_prev;
+
+
+		LineFeature * link_next = nullptr;
+		bool link_next_ambig = false;
+		bool link_next_alignment = false;
+
+		LineFeature * link_prev;
+		bool link_prev_ambig = false;
+		bool link_prev_alignment = false;
+
 		void flip_link_to(LineFeature* lf);
 		bool is_aligned();
 		bool linked_flag;

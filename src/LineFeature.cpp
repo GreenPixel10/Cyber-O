@@ -60,38 +60,7 @@ bool LineFeature::is_facing_outwards() {
 	return total > 0;
 }
 
-void LineFeature::align_linked() {
 
-
-	set_linked_flag(true);
-
-	//std::cout << "aligning " << debug << "\n";
-
-
-	for (auto &n : link_next) {
-		//std::cout << (n.second == true) << (n.first->linked_flag == false) << "\n";
-		if (n.first && n.first != this && n.second == true && n.first && !n.first->linked_flag) {
-			n.first->slope_alignment_reversal(this, this, n.second);
-			n.second = false;
-			//std::cout << debug << "is now aligned with " << n.first->get_debug() << "\n";
-		}
-	}
-	///does not get backt o it!
-	for (auto & n : link_prev) {
-		//std::cout << (n.second == true) << (n.first->linked_flag == false) << "\n";
-		if (n.first && n.first != this && n.second == true && !n.first->linked_flag) {
-			n.first->slope_alignment_reversal(this, this, n.second);
-			n.second = false;
-			//std::cout << debug << "is now aligned with " << n.first->get_debug() << "\n";
-
-		}
-	}
-
-	set_all_links_gathered(true);
-
-	//std::cout << "-----------------\n";
-
-}
 
 void LineFeature::set_slope_verified(bool is_slope_verified, bool recurse) {
 	slope_verified = is_slope_verified;
@@ -150,44 +119,6 @@ int LineFeature::get_length_at_point(glm::vec2 point) {
 	return -1;
 }
 
-void LineFeature::store_all_links() {
-	set_linked_flag(true);
-	linked_references = traverse_link_chain();
-}
-
-std::vector<LineFeature *> LineFeature::traverse_link_chain() {
-
-	std::vector<LineFeature *> A = {};
-
-	if (!linked_flag) { A.push_back(this);} //only add if not linked yet
-											//(stops calling contour getting duplicated)
-
-	set_linked_flag(true);
-
-	//keep going both ways down the chain!
-	for (auto n : link_prev) {
-		if (n.first && !n.first->linked_flag) {
-
-			std::vector<LineFeature *> B = n.first->traverse_link_chain();
-			for (auto& lf : B) {
-				A.push_back(lf);
-			}
-
-
-		}
-	}
-	for (auto & n : link_next) {
-		if (n.first && !n.first->linked_flag) {
-
-			std::vector<LineFeature *> B = n.first->traverse_link_chain();
-			for (auto & lf : B) {
-				A.push_back(lf);
-			}
-		}
-	}
-	
-	return A;
-}
 
 void LineFeature::construct_splines() {
 
@@ -291,68 +222,7 @@ void LineFeature::construct_polyline() {
 	line.setClosed(closed);
 }
 
-void LineFeature::slope_alignment_reversal(LineFeature* origin, LineFeature* last, int lazy_depth) {
 
-
-	/* debug stuff
-	std::string gap = "";
-	for(int i = 0; i <= lazy_depth; i++) {
-		gap += "   ";
-	}
-	std::cout << gap << debug << "\n";
-	*/
-
-
-	/////if this contour borders the origin contour
-	///invert correctness of link
-	///this is because the origin (if it exists) is not flipped,
-	/// so anything connecting to it getting flipped must also flip
-	/// its correctness flag
-
-	for (auto & n : link_prev) { //DUP
-		if (n.first == origin) {
-			n.second = !n.second;
-			//invert backlink
-			n.first->flip_link_to(this);
-		
-		}
-	}
-
-	for (auto & n : link_next) { 
-		if (n.first == origin) {
-			n.second = !n.second;
-			//invert backlink
-			n.first->flip_link_to(this);
-		}
-	}
-
-
-	/////actual reversal:
-	set_linked_flag(true);
-	std::reverse(spline_points.begin(), spline_points.end());
-	construct_polyline();
-	//std::cout << gap << "reversing " << debug << "\n";
-
-
-	//recursion check (should NOT trigger)
-	if (lazy_depth > 500) {
-		std::cout << "RECURSION OVERFLOW\n";
-		return;
-	}
-
-	//and keep going both ways down the chain!
-	for (auto n : link_prev) {
-		if (n.first && !n.first->linked_flag) {
-			n.first->slope_alignment_reversal(origin, this, lazy_depth + 1);
-		}
-	}
-	for (auto & n : link_next) {
-		if (n.first && !n.first->linked_flag) {
-			n.first->slope_alignment_reversal(origin, this, lazy_depth + 1);
-		}
-	}
-
-}
 
 void LineFeature::reverse_single_slope() {
 	
@@ -365,15 +235,25 @@ void LineFeature::reverse_single_slope() {
 
 void LineFeature::reverse_all_linked_slopes() {
 	reverse_single_slope();
-	for (auto & linked : linked_references) {
-		linked->reverse_single_slope();
-	}
+	//for (auto & linked : linked_references) {
+		//linked->reverse_single_slope();
+	//}
 }
 
 
 void LineFeature::draw() {
 	ofSetLineWidth(get_slope_verified()?1:5);
-	ofSetColor(get_slope_verified()?col:ofColor::red);
+
+
+	#define HIGHLIGHT_UNVERIFIED false
+
+	if (HIGHLIGHT_UNVERIFIED) {
+		ofSetColor(get_slope_verified() ? col : ofColor::red);
+	}
+	else {
+		ofSetColor(col);
+	}
+	
 	
 
 
@@ -409,15 +289,19 @@ void LineFeature::draw() {
 		ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, 300);
 	}
 
-	#define DRAW_LINKS false
+	#define DRAW_LINKS true
 	if (DRAW_LINKS) {
 		ofSetColor(ofColor::cyan);
 
-		for (auto& l : link_next) {
-			ofDrawLine(line.getPointAtPercent(0), l.first->get_line().getPointAtPercent(100));
+		if (link_prev){
+
+			ofDrawLine(line.getPointAtPercent(0), link_prev->get_line().getPointAtPercent(link_prev_alignment ? 0 : 100));
+		
 		}
-		for (auto & l : link_prev) {
-			ofDrawLine(line.getPointAtPercent(100), l.first->get_line().getPointAtPercent(0));
+
+		if (link_next){
+
+			ofDrawLine(line.getPointAtPercent(100), link_next->get_line().getPointAtPercent(link_next_alignment ? 100 : 0));
 		}
 		
 	}
@@ -425,42 +309,4 @@ void LineFeature::draw() {
 
 }
 
-void LineFeature::flip_link_to(LineFeature * lf) {
-	
 
-	for (auto & n : link_prev) { //DUP
-
-		if (n.first == lf) {
-			n.second = !n.second;
-			//std::cout << "--- inverting backlink\n";
-		}
-	}
-
-	for (auto & n : link_next) {
-
-		if (n.first == lf) {
-			n.second = !n.second;
-			//std::cout << "--- inverting backlink\n";
-		}
-	}
-}
-
-bool LineFeature::is_aligned() {
-	
-	for (auto & n : link_prev) { //DUP
-
-		if (n.second) {
-			return false;
-		}
-	}
-
-	for (auto & n : link_next) {
-
-		if (n.second) {
-			return false;
-		}
-	}
-
-	return true;
-
-}

@@ -16,22 +16,31 @@ void SlopeDetector::detect_slope() {
 
 	set_debug_colours();
 
-	repair_contours();
-	align_contours();
 
-	int a = 0;
-	int b = 0;
+	//repair_contours();
 
-	for (auto& c : contours) {
-		if (c->link_next.size() <= 1 && c->link_prev.size() <= 1 && !(c->link_next.size() == 0 && c->link_prev.size() == 0)) {
-			a++;
+	//align_contours();
+
+	
+	simple_repair_contours();
+
+	for (auto & c : contours) {
+		if (c->link_next) {
+			std::cout << c->get_debug() << " has a gap with " << c->link_next->get_debug() << " and the alignment is " << c->link_next_alignment << "\n";
 		}
-		else if (c->link_next.size() > 1 || c->link_prev.size() > 1) {
-			b++;
+		if (c->link_prev) {
+			std::cout << c->get_debug() << " has a gap with " << c->link_prev->get_debug() << " and the alignment is " << c->link_prev_alignment << "\n";
 		}
 	}
 
-	std::cout << "links: " << a << " " << b << "\n";
+	int count = 0;
+	for (auto & c : contours) {
+		if (c->link_next) { count++;}
+		if (c->link_prev) { count++;}
+	}
+	std::cout << count / 2 << " simple gaps identified\n";
+
+	return;
 
 	slope_from_directional_points();
 	slope_from_directional_linears();
@@ -69,18 +78,13 @@ void SlopeDetector::set_debug_colours() {
 	}
 }
 
-void SlopeDetector::reset_contour_link_flags() {
-	for (auto & f : (*features)[S_CONTOUR]) {
-		LineFeature * contour = dynamic_cast<LineFeature *>(f);
-		contour->set_linked_flag(false);
-	}
-}
-
-void SlopeDetector::repair_contours() {
+void SlopeDetector::simple_repair_contours() {
 	for (auto cA : (*features)[S_CONTOUR]) {
 		LineFeature * contourA = dynamic_cast<LineFeature *>(cA);
 
-		if (contourA->get_closed()) { continue;}
+		if (contourA->get_closed()) {
+			continue;
+		}
 
 		ofPolyline Aline = contourA->get_line();
 		int A_end_index = Aline.size() - 1;
@@ -90,16 +94,18 @@ void SlopeDetector::repair_contours() {
 		glm::vec2 cA_svec = glm::normalize(cA_s - cA_s2);
 
 		glm::vec2 cA_e = Aline.getPointAtIndexInterpolated(A_end_index);
-		glm::vec2 cA_e2 = Aline.getPointAtIndexInterpolated(A_end_index-1);
+		glm::vec2 cA_e2 = Aline.getPointAtIndexInterpolated(A_end_index - 1);
 		glm::vec2 cA_evec = glm::normalize(cA_e - cA_e2);
 
-
-
 		for (auto cB : (*features)[S_CONTOUR]) {
-			if (cB == cA) { continue;}
+			if (cB == cA) {
+				continue;
+			}
 			LineFeature * contourB = dynamic_cast<LineFeature *>(cB);
 
-			if (contourB->get_closed()) { continue;}
+			if (contourB->get_closed()) {
+				continue;
+			}
 
 			ofPolyline Bline = contourB->get_line();
 			int B_end_index = Bline.size() - 1;
@@ -108,12 +114,11 @@ void SlopeDetector::repair_contours() {
 			glm::vec2 cB_svec = glm::normalize(cB_s - cB_s2);
 
 			glm::vec2 cB_e = Bline.getPointAtIndexInterpolated(B_end_index);
-			glm::vec2 cB_e2 = Bline.getPointAtIndexInterpolated(B_end_index-1);
+			glm::vec2 cB_e2 = Bline.getPointAtIndexInterpolated(B_end_index - 1);
 			glm::vec2 cB_evec = glm::normalize(cB_e - cB_e2);
 
 			//for each of the possible 4 connections
 			//check if they're close
-
 
 			//distances between points
 			int ss_dist = glm::distance(cA_s, cB_s);
@@ -121,28 +126,31 @@ void SlopeDetector::repair_contours() {
 			int es_dist = glm::distance(cA_e, cB_s);
 			int ee_dist = glm::distance(cA_e, cB_e);
 
-			#define _START 1
-			#define _END 0
-
+#define _START 1
+#define _END 0
 
 			int A_side = (std::min(ss_dist, se_dist) < std::min(es_dist, ee_dist)) ? _START : _END;
 			int B_side;
 
-			if (A_side == _START) {B_side = (ss_dist < se_dist)?_START:_END; }
-			if (A_side == _END) {B_side = (es_dist < ee_dist)?_START:_END; }
-
+			if (A_side == _START) {
+				if (contourA->link_prev_ambig) { continue;}
+				B_side = (ss_dist < se_dist) ? _START : _END;
+			}
+			if (A_side == _END) {
+				if (contourA->link_next_ambig) { continue;}
+				B_side = (es_dist < ee_dist) ? _START : _END;
+			}
 
 			bool aligned = !(A_side == B_side); //if both a and b are the same end, they aren't aligned
 
 			//get endpoints
-			glm::vec2 P = A_side == _START? cA_s : cA_e;
-			glm::vec2 Q = B_side == _START? cB_s : cB_e;
+			glm::vec2 P = A_side == _START ? cA_s : cA_e;
+			glm::vec2 Q = B_side == _START ? cB_s : cB_e;
 
-			
 			int dist = glm::distance(P, Q);
 
-			//skip if too far apart
-			#define CONTOUR_GAP_CLOSE 50 //metres
+//skip if too far apart
+#define CONTOUR_GAP_CLOSE 50 //metres
 			if (dist > CONTOUR_GAP_CLOSE * 100) {
 				continue;
 			}
@@ -151,102 +159,59 @@ void SlopeDetector::repair_contours() {
 			glm::vec2 Pv = A_side == _START ? cA_svec : cA_evec;
 			glm::vec2 Qv = B_side == _START ? cB_svec : cB_evec;
 
-
 			glm::vec2 Pex = P + (Pv * (dist / 2));
 			glm::vec2 Qex = Q + (Qv * (dist / 2));
 
-			#define CONTOUR_ANGLE_THRESHOLD -0.4f //
+#define CONTOUR_ANGLE_THRESHOLD -0.4f //
 			float dot = glm::dot(Pv, Qv);
-			if (dot > CONTOUR_ANGLE_THRESHOLD) { continue;}
-
+			if (dot > CONTOUR_ANGLE_THRESHOLD) {
+				continue;
+			}
 
 			glm::vec2 ideal_midpoint = (Q + P) / 2;
 
-
 			int variance = std::max(glm::distance(Pex, ideal_midpoint), glm::distance(Qex, ideal_midpoint));
 
-			
-
-			#define CONTOUR_GAP_VARIANCE_THRESHOLD 10 //metres
+#define CONTOUR_GAP_VARIANCE_THRESHOLD 10 //metres
 
 			if (variance < CONTOUR_GAP_VARIANCE_THRESHOLD * 100) {
-				
-				if (A_side == _START) {
-					contourA->add_link_prev({ contourB, !aligned });
 
+				if (A_side == _START) {
+					if (contourA->link_prev) {
+						contourA->link_prev = nullptr;
+						contourA->link_prev_ambig = true;
+					}
+					else{
+						contourA->link_prev = contourB;
+						contourA->link_prev_alignment = !aligned;
+					}
 				}
 				if (A_side == _END) {
-					contourA->add_link_next({ contourB, !aligned });
+					if (contourA->link_next) {
+						contourA->link_next = nullptr;
+						contourA->link_next_ambig = true;
+					}
+					else {
+						contourA->link_next = contourB;
+						contourA->link_next_alignment = !aligned;
+					}
 				}
 
-				//std::cout << "linking " << ((B_side == _START) ? "start" : "end") << " of " << contourA->get_debug() << " with "
-						 // << ((B_side == _START) ? "start" : "end") << " of " << contourB->get_debug() << " \n";
-
-
 			}
-			
-
-
-
-
 		}
 	}
-		
 }
 
-void SlopeDetector::align_contours() {
-
-
-	#define CONTOUR_ALIGNMENT_RUNAWAY 50
-
-	int h = 0;
-	int runaway = 1;
-
-	bool done = false;
-
-	auto rng = std::default_random_engine {};
-	std::srand(696969);
-
-	while (!done) {
-
-		std::ranges::shuffle((*features)[S_CONTOUR], rng);
-
-		if (runaway >= CONTOUR_ALIGNMENT_RUNAWAY) {
-			std::cout << "could not resolve linked contours\n";
-			break;
-		}
-
-		//recursively align:
-		for (auto & f : (*features)[S_CONTOUR]) {
-			LineFeature * contour = dynamic_cast<LineFeature *>(f);
-			contour->align_linked();
-			reset_contour_link_flags();
-			h++;
-		}
-
-		//check if done:
-		done = true;
-		for (auto & f : (*features)[S_CONTOUR]) {
-			LineFeature * contour = dynamic_cast<LineFeature *>(f);
-			if (!contour->is_aligned()) {
-				runaway++;
-				done = false;
-				break;
-			}
-		}
-	}
-
-	std::cout << "NOTICE: contour alignment took " << runaway << " pass(es)\n";
-
-	
+void SlopeDetector::reset_contour_link_flags() {
 	for (auto & f : (*features)[S_CONTOUR]) {
 		LineFeature * contour = dynamic_cast<LineFeature *>(f);
-		contour->store_all_links();
-		reset_contour_link_flags();
+		contour->set_linked_flag(false);
 	}
-
-	
 }
+
+
+
+
 
 
 void SlopeDetector::slope_from_directional_points(){
