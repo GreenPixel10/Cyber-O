@@ -14,6 +14,8 @@ void SlopeDetector::detect_slope() {
 
 	cast_contours();
 
+	std::cout << ">> " << contours.size() << " contours exist\n";
+
 	set_debug_colours();
 
 
@@ -23,7 +25,29 @@ void SlopeDetector::detect_slope() {
 
 	
 	detect_contour_gaps();
-	auto_close_gaps();
+	auto_classify_gaps();
+
+	int count = -1;
+	while (count != 0) {
+		count = 0;
+		for (auto & c : contours) {
+			if (c->link_next_final) {
+				count += c->append_line(c->link_next_final, true);
+			}
+			if (c->link_prev_final) {
+				count += c->append_line(c->link_prev_final, false);
+			}
+		}
+	}
+
+	int t = 0;
+	for (auto & c : contours) {
+		if (!c->merge_tunnel) {
+			t++;
+		}
+	}
+
+	std::cout << ">> " << t << " contours exist\n";
 
 	return;
 
@@ -133,7 +157,7 @@ void SlopeDetector::detect_contour_gaps() {
 			int dist = glm::distance(P, Q);
 
 //skip if too far apart
-#define CONTOUR_GAP_CLOSE 50 //metres
+#define CONTOUR_GAP_CLOSE 20 //metres
 			if (dist > CONTOUR_GAP_CLOSE * 100) {
 				continue;
 			}
@@ -146,8 +170,9 @@ void SlopeDetector::detect_contour_gaps() {
 			glm::vec2 Qex = Q + (Qv * (dist / 2));
 
 #define CONTOUR_ANGLE_THRESHOLD -0.4f //
+#define CONTOUR_TOUCHING_THRESHOLD 1 //metre
 			float dot = glm::dot(Pv, Qv);
-			if (dot > CONTOUR_ANGLE_THRESHOLD) {
+			if (dot > CONTOUR_ANGLE_THRESHOLD && dist > CONTOUR_TOUCHING_THRESHOLD * 100) {
 				continue;
 			}
 
@@ -156,6 +181,7 @@ void SlopeDetector::detect_contour_gaps() {
 			int variance = std::max(glm::distance(Pex, ideal_midpoint), glm::distance(Qex, ideal_midpoint));
 
 #define CONTOUR_GAP_VARIANCE_THRESHOLD 10 //metres
+
 
 			if (variance < CONTOUR_GAP_VARIANCE_THRESHOLD * 100) {
 
@@ -187,7 +213,7 @@ void SlopeDetector::detect_contour_gaps() {
 
 
 
-int SlopeDetector::auto_close_gaps(bool unambigous_only) {
+int SlopeDetector::auto_classify_gaps(bool unambigous_only) {
 
 	
 	int unambigous_count = 0;
@@ -209,10 +235,11 @@ int SlopeDetector::auto_close_gaps(bool unambigous_only) {
 
 				GapLink * best_single_gaplink = nullptr;
 				std::vector<GapLink *> * backlinks;
-
+		
 
 				for (auto & gl : *forwardlinks) { 
-					
+
+		
 
 					//set backlinks to B-> or <-B based on alignment / which end of A
 					if (i == 0) {
@@ -235,11 +262,12 @@ int SlopeDetector::auto_close_gaps(bool unambigous_only) {
 				//priotitize singly linked ones, if there are none just skip
 				if (!best_single_gaplink) { continue; }
 				
-				std::cout << "Linking " << c->get_debug() << " with " << best_single_gaplink->to->get_debug() << "\n";
+				//std::cout << "Linking " << c->get_debug() << " with " << best_single_gaplink->to->get_debug() << "\n";
 				
+				if (i == 0) { c->link_next_final = best_single_gaplink->to;}
+				if (i == 1) { c->link_prev_final = best_single_gaplink->to;}
 
-				//forawrd =
-				//backward =
+
 				if (forwardlinks->size() == 1 && backlinks->size() == 1) {unambigous_count++;}
 				else{semiambigous_count++;}
 
@@ -387,7 +415,7 @@ void SlopeDetector::slope_from_closed_loops() {
 		if (contour->get_closed()) {
 
 			if (!contour->is_facing_outwards()) {
-				contour->reverse_all_linked_slopes();
+				contour->reverse_single_slope();
 			}
 			
 			contour->set_slope_verified(true, true); //recursion needed?
@@ -440,7 +468,7 @@ void SlopeDetector::slope_from_similarity() {
 				if (similarity >= threshold) {
 					contourA->set_slope_verified(true, true);
 					//contourA->set_colour(ofColor::cyan);
-					if (needs_flip) { contourA->reverse_all_linked_slopes();}
+					if (needs_flip) { contourA->reverse_single_slope();}
 					verified_count++;
 				}
 			}

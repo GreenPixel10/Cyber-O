@@ -19,6 +19,9 @@ LineFeature::LineFeature() {
 	link_prev = {};
 	all_links_gathered = false;
 	deletion_flag = false;
+	link_next_final = nullptr;
+	link_prev_final = nullptr;
+	merge_tunnel = nullptr;
 }
 
 void LineFeature::init() {
@@ -86,7 +89,7 @@ void LineFeature::lean_slope_apply() {
 
 	//if the contour was not correct...
 	if (slope_leaner < 0) {
-		reverse_all_linked_slopes(); //flip it and all linked contours
+		reverse_single_slope(); //flip it and all linked contours
 	}
 
 	slope_leaner = 0; //reset leaner (probably unneeded)
@@ -225,18 +228,65 @@ void LineFeature::construct_polyline() {
 void LineFeature::reverse_single_slope() {
 	
 	//std::cout << "Reversing " << debug << "!\n";
-	std::reverse(spline_points.begin(), spline_points.end());
-	construct_polyline();
+	std::reverse(line.begin(), line.end());
+	//construct_polyline();
+	std::swap(link_next_final, link_prev_final);
 	if (DRAW_SLOPE_FLIPS) {col = ofColor::blue;}
 
 }
 
-void LineFeature::reverse_all_linked_slopes() {
-	reverse_single_slope();
-	//for (auto & linked : linked_references) {
-		//linked->reverse_single_slope();
-	//}
+int LineFeature::append_line(LineFeature * lf, bool after) {
+
+	while (lf->merge_tunnel) {
+		lf = lf->merge_tunnel;
+	}
+
+	
+	if (line.size() == 0) { return 0;}
+
+	if (lf == this) {
+		closed = true;
+		link_next_final = nullptr;
+		link_prev_final = nullptr;
+		std::cout << "what?\n";
+		return 1;
+	}
+
+	//std::cout << "appending " << lf->get_debug() << " to " << debug << "\n";
+
+	glm::vec3 connection_point_A = line.getPointAtPercent(after?100:0);
+
+	glm::vec3 lf_start = lf->get_line().getPointAtPercent(0);
+	glm::vec3 lf_end = lf->get_line().getPointAtPercent(100);
+
+	bool closest_part_is_start = glm::distance2(connection_point_A, lf_start) < glm::distance2(connection_point_A, lf_end);
+
+	if ((after && !closest_part_is_start) || (!after && closest_part_is_start)) {
+		lf->reverse_single_slope();
+	}
+
+	if (after) {
+		line.addVertices(lf->get_line().getVertices());
+		link_next_final = lf->link_next_final;
+	}
+	else {
+		lf->get_line().addVertices(line.getVertices());
+		line = lf->get_line();
+		link_prev_final = lf->link_prev_final;
+	}
+
+	lf->get_line().clear();
+	lf->link_next_final = nullptr;
+	lf->link_prev_final = nullptr;
+	lf->merge_tunnel = this;
+	//anything referencing the now-empty feature willr eference the merged one instead
+
+	//construct_polyline();
+	return 1;
+
 }
+
+
 
 
 void LineFeature::draw() {
@@ -280,7 +330,7 @@ void LineFeature::draw() {
 	}
 
 	#define DRAW_ENDPOINTS true
-	if (DRAW_ENDPOINTS) {
+	if (DRAW_ENDPOINTS && line.size() >= 2) {
 		ofSetColor(ofColor::green);
 		ofDrawCircle(line[0].x, line[0].y, 300);
 		ofSetColor(ofColor::red);

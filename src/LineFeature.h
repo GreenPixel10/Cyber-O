@@ -58,7 +58,7 @@ class LineFeature : public Feature {
 		void init() override;
 
 		inline void add_point(LinePoint p) { points.push_back(p); }
-		inline ofPolyline get_line() { return line;}
+		inline ofPolyline& get_line() { return line;}
 		inline bool get_closed() { return closed;}
 		bool get_closed_via_linked();
 		bool is_facing_outwards();
@@ -83,7 +83,7 @@ class LineFeature : public Feature {
 		void draw();
 
 		void reverse_single_slope();
-		void reverse_all_linked_slopes();
+		int append_line(LineFeature* lf, bool after);
 
 		
 
@@ -99,9 +99,9 @@ class LineFeature : public Feature {
 		std::vector< GapLink *> link_prev;
 
 		LineFeature* link_next_final;
-		LINKTYPE link_next_type;
 		LineFeature* link_prev_final;
-		LINKTYPE link_prev_type;
+		LineFeature* merge_tunnel;
+
 
 		bool deletion_flag;
 
