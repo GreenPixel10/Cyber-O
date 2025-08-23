@@ -17,8 +17,8 @@ LineFeature::LineFeature() {
 	slope_leaner = 0;
 	link_next = {};
 	link_prev = {};
-	linked_flag = false;
 	all_links_gathered = false;
+	deletion_flag = false;
 }
 
 void LineFeature::init() {
@@ -65,9 +65,7 @@ bool LineFeature::is_facing_outwards() {
 void LineFeature::set_slope_verified(bool is_slope_verified, bool recurse) {
 	slope_verified = is_slope_verified;
 	if (recurse) {
-		for (auto & lf : linked_references) {
-			lf->set_slope_verified(true);
-		}
+		//GO TO LINKS
 	}
 
 }
@@ -293,6 +291,7 @@ void LineFeature::draw() {
 	if (DRAW_LINKS) {
 		ofSetColor(ofColor::cyan);
 
+		/*
 		if (link_prev){
 
 			ofDrawLine(line.getPointAtPercent(0), link_prev->get_line().getPointAtPercent(link_prev_alignment ? 0 : 100));
@@ -303,10 +302,10 @@ void LineFeature::draw() {
 
 			ofDrawLine(line.getPointAtPercent(100), link_next->get_line().getPointAtPercent(link_next_alignment ? 100 : 0));
 		}
-		
+		*/
 	}
 
 
 }
 
-
+GapLink::GapLink(LineFeature * to_, bool is_aligned_, int variance_): to(to_), is_aligned(is_aligned_), variance(variance_) {}

@@ -22,23 +22,17 @@ void SlopeDetector::detect_slope() {
 	//align_contours();
 
 	
-	simple_repair_contours();
-
+	detect_contour_gaps();
+	
 	for (auto & c : contours) {
-		if (c->link_next) {
-			std::cout << c->get_debug() << " has a gap with " << c->link_next->get_debug() << " and the alignment is " << c->link_next_alignment << "\n";
-		}
-		if (c->link_prev) {
-			std::cout << c->get_debug() << " has a gap with " << c->link_prev->get_debug() << " and the alignment is " << c->link_prev_alignment << "\n";
-		}
+		std::sort(c->link_next.begin(), c->link_next.end(), [](auto & left, auto & right) {
+			return abs(left->variance) < abs(right->variance);
+		});
+		std::sort(c->link_prev.begin(), c->link_prev.end(), [](auto & left, auto & right) {
+			return abs(left->variance) < abs(right->variance);
+		});
 	}
-
-	int count = 0;
-	for (auto & c : contours) {
-		if (c->link_next) { count++;}
-		if (c->link_prev) { count++;}
-	}
-	std::cout << count / 2 << " simple gaps identified\n";
+	auto_close_gaps();
 
 	return;
 
@@ -78,7 +72,7 @@ void SlopeDetector::set_debug_colours() {
 	}
 }
 
-void SlopeDetector::simple_repair_contours() {
+void SlopeDetector::detect_contour_gaps() {
 	for (auto cA : (*features)[S_CONTOUR]) {
 		LineFeature * contourA = dynamic_cast<LineFeature *>(cA);
 
@@ -133,15 +127,13 @@ void SlopeDetector::simple_repair_contours() {
 			int B_side;
 
 			if (A_side == _START) {
-				if (contourA->link_prev_ambig) { continue;}
 				B_side = (ss_dist < se_dist) ? _START : _END;
 			}
 			if (A_side == _END) {
-				if (contourA->link_next_ambig) { continue;}
 				B_side = (es_dist < ee_dist) ? _START : _END;
 			}
 
-			bool aligned = !(A_side == B_side); //if both a and b are the same end, they aren't aligned
+			bool aligned = (A_side != B_side); //aligned if A and B are connected at different ends
 
 			//get endpoints
 			glm::vec2 P = A_side == _START ? cA_s : cA_e;
@@ -176,25 +168,14 @@ void SlopeDetector::simple_repair_contours() {
 
 			if (variance < CONTOUR_GAP_VARIANCE_THRESHOLD * 100) {
 
-				if (A_side == _START) {
-					if (contourA->link_prev) {
-						contourA->link_prev = nullptr;
-						contourA->link_prev_ambig = true;
-					}
-					else{
-						contourA->link_prev = contourB;
-						contourA->link_prev_alignment = !aligned;
-					}
+				
+				GapLink* gl = new GapLink(contourB, aligned, variance);
+
+				if (A_side == _START) {		
+						contourA->link_prev.push_back(gl);	
 				}
 				if (A_side == _END) {
-					if (contourA->link_next) {
-						contourA->link_next = nullptr;
-						contourA->link_next_ambig = true;
-					}
-					else {
-						contourA->link_next = contourB;
-						contourA->link_next_alignment = !aligned;
-					}
+						contourA->link_next.push_back(gl);	
 				}
 
 			}
@@ -202,12 +183,77 @@ void SlopeDetector::simple_repair_contours() {
 	}
 }
 
-void SlopeDetector::reset_contour_link_flags() {
-	for (auto & f : (*features)[S_CONTOUR]) {
-		LineFeature * contour = dynamic_cast<LineFeature *>(f);
-		contour->set_linked_flag(false);
+
+
+void SlopeDetector::auto_close_gaps() {
+
+	
+	int unambigous_count = 0;
+
+	for (auto& c : contours) {
+
+
+		std::vector<std::vector<GapLink *> *> linksets = {&(c->link_next), &(c->link_prev) };
+
+		for (int i = 0; i < 2; i++) { //FIRST: A->  THEN: <-A
+
+
+			std::vector<GapLink *> * forwardlinks = linksets[i];
+			
+
+
+			if (!forwardlinks->empty()) {
+
+				//UNAMBIGIOUS FORWARD
+				if (forwardlinks->size() == 1) {
+					GapLink * gl = forwardlinks->at(0);
+					std::vector<GapLink *> * backlinks;
+
+					//set backlinks to B-> or <-B based on alignment / which end of A
+					if (i == 0) {
+						backlinks = gl->is_aligned ? &(gl->to->link_prev) : &(gl->to->link_next);
+					}
+					if (i == 1) {
+						backlinks = gl->is_aligned ? &(gl->to->link_next) : &(gl->to->link_prev);
+					}
+
+					//UNAMBIGIOUS BACKWARDS
+					if (backlinks->size() == 1) {
+
+						std::cout << "UNAMBIGUOUS Linking " << c->get_debug() << " with " << gl->to->get_debug() << "\n";
+						unambigous_count++;
+						forwardlinks->clear();
+						backlinks->clear();
+						//forawrd =
+						//backward = 
+
+					}
+					else {
+
+						for (auto& bl : *backlinks) {
+							std::cout << bl->variance << " ";
+						}
+						std::cout << "\n";
+					}
+				}
+
+				//AMBIGUOUS
+				else {
+					
+
+				}
+
+			}
+		}
+
+
+
+
 	}
+
+	std::cout << "Unambiguous: " << unambigous_count << "\n";
 }
+
 
 
 

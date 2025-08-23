@@ -32,6 +32,24 @@ class SplinePoint {
 
 };
 
+class LineFeature;
+class GapLink {
+	public:
+		GapLink(LineFeature* to_, bool is_aligned_, int variance_);
+		LineFeature *to;
+		bool is_aligned;
+		int variance;
+};
+
+
+enum LINKTYPE {
+	NONE,
+	UNAMB,
+	AMB_AUTO,
+	AMB_UNKNOWN,
+	USER
+}; 
+
 class LineFeature : public Feature {
 
 	public:
@@ -45,7 +63,6 @@ class LineFeature : public Feature {
 		bool get_closed_via_linked();
 		bool is_facing_outwards();
 
-		inline void set_linked_flag(bool set) { linked_flag = set;}
 
 		inline bool get_slope_verified() { return slope_verified; }
 		void set_slope_verified(bool is_slope_verified, bool recurse = false);
@@ -58,7 +75,6 @@ class LineFeature : public Feature {
 
 
 
-		inline void add_linked_reference(LineFeature * lf) { if(lf!=this){linked_references.push_back(lf);} }
 		inline bool are_all_links_gathered() { return all_links_gathered;}
 		inline void set_all_links_gathered(bool b) { all_links_gathered = b; }
 
@@ -79,20 +95,18 @@ class LineFeature : public Feature {
 
 
 
-		LineFeature * link_next = nullptr;
-		bool link_next_ambig = false;
-		bool link_next_alignment = false;
+		std::vector < GapLink *> link_next;
+		std::vector< GapLink *> link_prev;
 
-		LineFeature * link_prev;
-		bool link_prev_ambig = false;
-		bool link_prev_alignment = false;
+		LineFeature* link_next_final;
+		LINKTYPE link_next_type;
+		LineFeature* link_prev_final;
+		LINKTYPE link_prev_type;
 
-		void flip_link_to(LineFeature* lf);
-		bool is_aligned();
-		bool linked_flag;
+		bool deletion_flag;
+
 
 		int elevation = INT_MIN;
-		std::vector<LineFeature *> linked_references;
 
 	private:
 		std::vector<LinePoint> points; //raw data

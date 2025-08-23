@@ -14,6 +14,8 @@
 #define POINT_CLOSE_TO_CONTOUR 5 //metres
 #define LINE_CLOSE_TO_CONTOUR 7.5 //metres
 
+
+
 class SlopeDetector {
 	public:
 		SlopeDetector();
@@ -23,7 +25,8 @@ class SlopeDetector {
 		void cast_contours();
 		void detect_slope();
 		void set_debug_colours();
-		void simple_repair_contours();
+		void detect_contour_gaps();
+		void auto_close_gaps();
 		void slope_from_directional_points(); //eg. slope tags
 		void slope_from_directional_linears(); //eg. long cliffs
 		void slope_from_closed_loops(); //eg. hilltops
@@ -37,8 +40,6 @@ class SlopeDetector {
 
 		int get_similarity(LineFeature* f1, LineFeature* f2);
 
-
-		void reset_contour_link_flags();
 
 		std::vector<LineFeature *> contours;
 
