@@ -290,13 +290,16 @@ int LineFeature::append_line(LineFeature * lf, bool after) {
 
 
 void LineFeature::draw() {
-	ofSetLineWidth(get_slope_verified()?1:5);
+
+	if (merge_tunnel) { return;}
+
+	ofSetLineWidth(get_slope_verified()?5:1);
 
 
-	#define HIGHLIGHT_UNVERIFIED false
+	#define HIGHLIGHT_UNVERIFIED true
 
 	if (HIGHLIGHT_UNVERIFIED) {
-		ofSetColor(get_slope_verified() ? col : ofColor::red);
+		ofSetColor(get_slope_verified() ? col : ofColor::black);
 	}
 	else {
 		ofSetColor(col);
@@ -315,7 +318,7 @@ void LineFeature::draw() {
 	line.draw();
 	
 	#define DRAW_TAGS true
-	#define DRAW_TAGS_ALWAYS true
+	#define DRAW_TAGS_ALWAYS false
 	if (DRAW_TAGS && (DRAW_TAGS_ALWAYS || get_slope_verified())) {
 		for (int i = 1; i < line.size(); i++) {
 			glm::vec2 p = line[i];
@@ -329,7 +332,15 @@ void LineFeature::draw() {
 		}
 	}
 
-	#define DRAW_ENDPOINTS true
+	#define DRAW_GAPS true
+	if (DRAW_GAPS && line.size() >= 2 && !closed) {
+		ofSetColor(ofColor::red);
+		if (!link_prev_final) { ofDrawCircle(line[0].x, line[0].y, 500);}
+		
+		if (!link_next_final) { ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, 500);}
+	}
+
+	#define DRAW_ENDPOINTS false
 	if (DRAW_ENDPOINTS && line.size() >= 2) {
 		ofSetColor(ofColor::green);
 		ofDrawCircle(line[0].x, line[0].y, 300);
@@ -337,6 +348,7 @@ void LineFeature::draw() {
 		ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, 300);
 	}
 
+	
 	#define DRAW_LINKS true
 	if (DRAW_LINKS) {
 		ofSetColor(ofColor::cyan);
