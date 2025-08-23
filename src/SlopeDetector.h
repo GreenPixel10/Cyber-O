@@ -26,7 +26,7 @@ class SlopeDetector {
 		void detect_slope();
 		void set_debug_colours();
 		void detect_contour_gaps();
-		void auto_close_gaps();
+		int auto_close_gaps(bool unambigous_only = true);
 		void slope_from_directional_points(); //eg. slope tags
 		void slope_from_directional_linears(); //eg. long cliffs
 		void slope_from_closed_loops(); //eg. hilltops

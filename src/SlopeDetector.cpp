@@ -23,15 +23,6 @@ void SlopeDetector::detect_slope() {
 
 	
 	detect_contour_gaps();
-	
-	for (auto & c : contours) {
-		std::sort(c->link_next.begin(), c->link_next.end(), [](auto & left, auto & right) {
-			return abs(left->variance) < abs(right->variance);
-		});
-		std::sort(c->link_prev.begin(), c->link_prev.end(), [](auto & left, auto & right) {
-			return abs(left->variance) < abs(right->variance);
-		});
-	}
 	auto_close_gaps();
 
 	return;
@@ -60,8 +51,8 @@ void SlopeDetector::cast_contours() {
 
 
 void SlopeDetector::set_debug_colours() {
-	std::vector<ofColor> cols = { ofColor::yellow, ofColor::orange, ofColor::red, ofColor::purple, ofColor::blue, ofColor::green };
-	std::vector<std::string> colnames = { "yellow", "orange", "red", "purple", "blue", "green" };
+	std::vector<ofColor> cols = { ofColor::yellow, ofColor::orange, ofColor::red, ofColor::purple, ofColor::blue, ofColor::green, ofColor::magenta, ofColor::turquoise, ofColor::indigo};
+	std::vector<std::string> colnames = { "yellow", "orange", "red", "purple", "blue", "green", "magenta", "turquoise", "indigo" };
 	int numcols = cols.size();
 
 	for (int i = 0; i < (*features)[S_CONTOUR].size(); i++) {
@@ -181,14 +172,26 @@ void SlopeDetector::detect_contour_gaps() {
 			}
 		}
 	}
+
+	//SORT connections by variance (bad to good)
+	for (auto & c : contours) {
+	std::sort(c->link_next.begin(), c->link_next.end(), [](auto & left, auto & right) {
+		return abs(left->variance) > abs(right->variance);
+	});
+	std::sort(c->link_prev.begin(), c->link_prev.end(), [](auto & left, auto & right) {
+		return abs(left->variance) > abs(right->variance);
+	});
+	}
+
 }
 
 
 
-void SlopeDetector::auto_close_gaps() {
+int SlopeDetector::auto_close_gaps(bool unambigous_only) {
 
 	
 	int unambigous_count = 0;
+	int semiambigous_count = 0;
 
 	for (auto& c : contours) {
 
@@ -200,14 +203,16 @@ void SlopeDetector::auto_close_gaps() {
 
 			std::vector<GapLink *> * forwardlinks = linksets[i];
 			
-
+			if (unambigous_only && forwardlinks->size() > 1) { continue;}
 
 			if (!forwardlinks->empty()) {
 
-				//UNAMBIGIOUS FORWARD
-				if (forwardlinks->size() == 1) {
-					GapLink * gl = forwardlinks->at(0);
-					std::vector<GapLink *> * backlinks;
+				GapLink * best_single_gaplink = nullptr;
+				std::vector<GapLink *> * backlinks;
+
+
+				for (auto & gl : *forwardlinks) { 
+					
 
 					//set backlinks to B-> or <-B based on alignment / which end of A
 					if (i == 0) {
@@ -217,31 +222,31 @@ void SlopeDetector::auto_close_gaps() {
 						backlinks = gl->is_aligned ? &(gl->to->link_next) : &(gl->to->link_prev);
 					}
 
-					//UNAMBIGIOUS BACKWARDS
-					if (backlinks->size() == 1) {
-
-						std::cout << "UNAMBIGUOUS Linking " << c->get_debug() << " with " << gl->to->get_debug() << "\n";
-						unambigous_count++;
-						forwardlinks->clear();
-						backlinks->clear();
-						//forawrd =
-						//backward = 
-
-					}
-					else {
-
-						for (auto& bl : *backlinks) {
-							std::cout << bl->variance << " ";
-						}
-						std::cout << "\n";
-					}
-				}
-
-				//AMBIGUOUS
-				else {
 					
-
+					if (backlinks->size() == 1) {
+						best_single_gaplink = gl;
+					}
+	
+				
 				}
+
+				if (unambigous_only && backlinks->size() > 1) {continue;}
+
+				//priotitize singly linked ones, if there are none just skip
+				if (!best_single_gaplink) { continue; }
+				
+				std::cout << "Linking " << c->get_debug() << " with " << best_single_gaplink->to->get_debug() << "\n";
+				
+
+				//forawrd =
+				//backward =
+				if (forwardlinks->size() == 1 && backlinks->size() == 1) {unambigous_count++;}
+				else{semiambigous_count++;}
+
+				forwardlinks->clear();
+				backlinks->clear();
+				
+
 
 			}
 		}
@@ -252,6 +257,9 @@ void SlopeDetector::auto_close_gaps() {
 	}
 
 	std::cout << "Unambiguous: " << unambigous_count << "\n";
+	std::cout << "Semiambigious: " << semiambigous_count << "\n";
+
+	return unambigous_count + semiambigous_count;
 }
 
 
