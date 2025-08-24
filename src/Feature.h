@@ -14,6 +14,7 @@ class Feature {
 
 		virtual void init() = 0;
 
+
 	protected:
 		ofColor col;
 		int S_CODE;

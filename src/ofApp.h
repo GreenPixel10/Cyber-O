@@ -24,6 +24,7 @@ class ofApp : public ofBaseApp{
 		void mouseDragged(int x, int y, int button);
 		void mousePressed(int x, int y, int button);
 		void mouseReleased(int x, int y, int button);
+		void mouseScrolled(int x, int y, float scrollX, float scrollY);
 		void mouseEntered(int x, int y);
 		void mouseExited(int x, int y);
 		void windowResized(int w, int h);
@@ -59,6 +60,9 @@ class ofApp : public ofBaseApp{
 
 		std::map<int, std::vector<Feature*>> features; //indexed by S_CODE
 
+		glm::vec3 pan_cam_pos;
+		bool panning = false;
+		glm::vec3 pan_mouse_pos;
 
 		int zoom;
 };

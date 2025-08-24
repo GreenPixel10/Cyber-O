@@ -18,7 +18,6 @@ LineFeature::LineFeature() {
 	link_next = {};
 	link_prev = {};
 	all_links_gathered = false;
-	deletion_flag = false;
 	link_next_final = nullptr;
 	link_prev_final = nullptr;
 	merge_tunnel = nullptr;

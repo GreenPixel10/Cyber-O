@@ -26,6 +26,12 @@ void ofApp::setup() {
 	load_symbols();
 	load_features();
 	get_view_transforms();
+	for (auto & c : line_features) {
+		c->construct_polyline();
+	}
+	for (auto & t : point_features) {
+		t->construct_point();
+	}
 
 	sd.set_features(&features);
 	sd.detect_slope();
@@ -206,13 +212,7 @@ void ofApp::get_view_transforms() {
 
 
 
-	for (auto & c : line_features) {
-		c->construct_polyline();
 
-	}
-	for (auto & t : point_features) {
-		t->construct_point();
-	}
 
 
 }
@@ -334,16 +334,36 @@ void ofApp::mouseMoved(int x, int y ){
 
 //--------------------------------------------------------------
 void ofApp::mouseDragged(int x, int y, int button){
-
+	if (button == 1) {
+		glm::vec3 pan_offset = (glm::vec3(x, y, 0) - pan_mouse_pos);
+		pan_offset *= zoom;
+		camera.setPosition(pan_cam_pos - pan_offset);
+	}
 }
 
 //--------------------------------------------------------------
 void ofApp::mousePressed(int x, int y, int button){
-
+	if (button == 1) {
+		ofHideCursor();
+		panning = true;
+		pan_mouse_pos = glm::vec3(x,y,0);
+		pan_cam_pos = camera.getPosition();
+	}
+	
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
+	if (button == 1) {
+		panning = false;
+		ofShowCursor();
+	}
+}
+
+void ofApp::mouseScrolled(int x, int y, float scrollX, float scrollY) {
+
+	if (scrollY == 1) zoom /= 1.2;
+	if (scrollY == -1) zoom *= 1.2;
 
 }
 

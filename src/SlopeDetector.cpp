@@ -67,6 +67,7 @@ void SlopeDetector::detect_slope() {
 
 
 void SlopeDetector::cast_contours() {
+	contours.clear();
 	for (auto & f : (*features)[S_CONTOUR]) {
 		LineFeature * contour = dynamic_cast<LineFeature *>(f);
 		contours.push_back(contour);
