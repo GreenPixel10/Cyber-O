@@ -64,5 +64,5 @@ class ofApp : public ofBaseApp{
 		bool panning = false;
 		glm::vec3 pan_mouse_pos;
 
-		int zoom;
+		float zoom;
 };

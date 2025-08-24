@@ -158,7 +158,7 @@ void SlopeDetector::detect_contour_gaps() {
 			int dist = glm::distance(P, Q);
 
 //skip if too far apart
-#define CONTOUR_GAP_CLOSE 20 //metres
+#define CONTOUR_GAP_CLOSE 30 //metres
 			if (dist > CONTOUR_GAP_CLOSE * 100) {
 				continue;
 			}
@@ -181,10 +181,12 @@ void SlopeDetector::detect_contour_gaps() {
 
 			int variance = std::max(glm::distance(Pex, ideal_midpoint), glm::distance(Qex, ideal_midpoint));
 
-#define CONTOUR_GAP_VARIANCE_THRESHOLD 10 //metres
+#define CONTOUR_GAP_VARIANCE_THRESHOLD 20 //metres
 
-
-			if (variance < CONTOUR_GAP_VARIANCE_THRESHOLD * 100) {
+			float distance_factor = (float)dist / ((float)CONTOUR_GAP_CLOSE * 100);
+			float variance_multiplier = 1.0f - distance_factor;
+	
+			if (variance < variance_multiplier * (CONTOUR_GAP_VARIANCE_THRESHOLD * 100)) {
 
 				
 				GapLink* gl = new GapLink(contourB, aligned, variance);

@@ -364,7 +364,7 @@ void ofApp::mouseScrolled(int x, int y, float scrollX, float scrollY) {
 
 	if (scrollY == 1) zoom /= 1.2;
 	if (scrollY == -1) zoom *= 1.2;
-
+	if (zoom < 1) { zoom = 1;}
 }
 
 //--------------------------------------------------------------
