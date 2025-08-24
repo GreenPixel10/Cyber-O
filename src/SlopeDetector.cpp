@@ -193,7 +193,7 @@ void SlopeDetector::detect_contour_gaps() {
 				float dot = glm::dot(Pv, Qv);
 				if (dot > CONTOUR_ANGLE_THRESHOLD && dist > CONTOUR_TOUCHING_THRESHOLD * 100) {
 					if (DEBUG_GAP_REJECTION) std::cout << "bad angle\n"; //unfortunately nessesary to avoid parallel contours linking up
-					continue;
+					if(!loop){continue;}
 				}
 
 				glm::vec2 ideal_midpoint = (Q + P) / 2;

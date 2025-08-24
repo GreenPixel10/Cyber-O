@@ -99,17 +99,17 @@ int LineFeature::get_length_at_point(glm::vec2 point) {
 	if(closed){vertices.push_back(vertices[0]);}
 
 	int walk_total = 0;
-
+	int step = 100;
 	for (int i = 0; i < vertices.size() - 1; i++) {
 		glm::vec2 A = vertices[i];
 		glm::vec2 B = vertices[i+1];
 		glm::vec2 vec = B-A;
 		float len = glm::distance(A,B);
-		for (int j = 0; j < len; j += 100) {
+		for (int j = 0; j < len; j += step) {
 			double p = j/len;
 			glm::vec2 checkpoint = A + (p*vec);
 			float dist = glm::distance(checkpoint, point);
-			if (dist < 100) {
+			if (dist < step) {
 				return walk_total + j;
 			}
 		}
@@ -125,10 +125,11 @@ void LineFeature::autoclose_almost_loop() {
 	float len = line.getLengthAtIndex(line.size()-1);
 	#define AUTO_CLOSE_THRESHOLD 20 //metres
 	#define AUTO_CLOSE_MINSIZE 35 // metres
-	float d = glm::distance(spline_points.front().pos, spline_points.back().pos);
+	float d = glm::distance(line.getPointAtPercent(0), line.getPointAtPercent(100));
 	if ((len > AUTO_CLOSE_MINSIZE * 100) && (d < AUTO_CLOSE_THRESHOLD * 100)) {
 		closed = true;
 	}
+	//std::cout << "close check: " << d << " vs " << AUTO_CLOSE_THRESHOLD * 100 << "\n";
 
 }
 
