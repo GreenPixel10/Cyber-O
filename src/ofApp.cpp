@@ -8,13 +8,13 @@ void ofApp::setup() {
 	init_camera();
 
 
-	//load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
+	load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
 
 
 	//load_map("D:/Projects/OrienteeringSim/bruce.omap");
-	load_map("D:/Projects/OrienteeringSim/Barrens.omap");
+	//load_map("D:/Projects/OrienteeringSim/Barrens.omap");
 	//load_map("D:/Projects/OrienteeringSim/Cite.omap");
-	//load_map("D:/Projects/OrienteeringSim/Green.omap");
+	load_map("D:/Projects/OrienteeringSim/Green.omap");
 	//load_map("D:/Projects/OrienteeringSim/Cal.omap");
 
 	
@@ -280,7 +280,7 @@ void ofApp::draw(){
 		if (draw_mode == DRAW_MODE_SPECIFIED) { //render specified
 			for (auto & ftd : features_to_draw) {
 				for (Feature * f : features[ftd]) {
-					f->draw();
+					f->draw(zoom);
 				}
 			}
 		}
@@ -291,7 +291,7 @@ void ofApp::draw(){
 					continue;
 				}
 				for (Feature * f : features[ftd.first]) {
-					f->draw();
+					f->draw(zoom);
 				}
 			}
 		}

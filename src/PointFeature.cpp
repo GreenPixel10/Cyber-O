@@ -20,7 +20,7 @@ void PointFeature::construct_point() {
 }
 
 
-void PointFeature::draw() {
+void PointFeature::draw(float zoom) {
 	ofSetColor(col);
 	ofDrawCircle(symbol.x, symbol.y, symbol.z);
 }

@@ -80,7 +80,7 @@ class LineFeature : public Feature {
 
 		void construct_splines();
 		void construct_polyline();
-		void draw();
+		void draw(float zoom);
 
 		void reverse_single_slope();
 		int append_line(LineFeature* lf, bool after);

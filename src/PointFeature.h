@@ -17,7 +17,7 @@ class PointFeature : public Feature {
 		void init() override;
 
 		void construct_point();
-		void draw();
+		void draw(float zoom);
 		inline glm::vec2 get_pos(){return pos;};
 		inline float get_rotation() { return rot;}
 

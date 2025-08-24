@@ -294,7 +294,7 @@ int LineFeature::append_line(LineFeature * lf, bool after) {
 
 
 
-void LineFeature::draw() {
+void LineFeature::draw(float zoom) {
 	
 	if (merge_tunnel) { return;}
 
@@ -340,20 +340,22 @@ void LineFeature::draw() {
 		}
 	}
 
+	int point_size = zoom * 5;
+
 	#define DRAW_GAPS true
 	if (DRAW_GAPS && line.size() >= 2 && !closed) {
 		ofSetColor(ofColor::red);
-		if (!link_prev_final) { ofDrawCircle(line[0].x, line[0].y, 500);}
+		if (!link_prev_final) { ofDrawCircle(line[0].x, line[0].y, point_size);}
 		
-		if (!link_next_final) { ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, 500);}
+		if (!link_next_final) { ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, point_size);}
 	}
 
 	#define DRAW_ENDPOINTS false
 	if (DRAW_ENDPOINTS && line.size() >= 2) {
 		ofSetColor(ofColor::green);
-		ofDrawCircle(line[0].x, line[0].y, 300);
+		ofDrawCircle(line[0].x, line[0].y, point_size);
 		ofSetColor(ofColor::red);
-		ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, 300);
+		ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, point_size);
 	}
 
 	

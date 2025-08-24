@@ -10,7 +10,7 @@ class Feature {
 		inline int get_S_CODE() { return S_CODE; }
 		inline std::string get_debug() { return debug;}
 		inline void set_debug(std::string s) { debug = s; }
-		virtual void draw() = 0;
+		virtual void draw(float zoom) = 0;
 
 		virtual void init() = 0;
 

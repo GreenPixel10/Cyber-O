@@ -192,7 +192,7 @@ void SlopeDetector::detect_contour_gaps() {
 				#define CONTOUR_TOUCHING_THRESHOLD 1 //metre
 				float dot = glm::dot(Pv, Qv);
 				if (dot > CONTOUR_ANGLE_THRESHOLD && dist > CONTOUR_TOUCHING_THRESHOLD * 100) {
-					if (DEBUG_GAP_REJECTION) std::cout << "bad angle\n";
+					if (DEBUG_GAP_REJECTION) std::cout << "bad angle\n"; //unfortunately nessesary to avoid parallel contours linking up
 					continue;
 				}
 
@@ -487,6 +487,8 @@ void SlopeDetector::slope_from_closed_loops() {
 
 void SlopeDetector::slope_from_similarity() {
 
+std::cout << (*features)[S_CONTOUR].size() << " <<\n";
+
 #define SIMILARITY_LENGTH_THRESHOLD 175 //metres
 
 	int verified_count = -1;
@@ -523,7 +525,7 @@ void SlopeDetector::slope_from_similarity() {
 
 
 				int contourA_metre_length = (int)((line.getLengthAtIndex(line.size() - 1)) / 100); //surely better way
-				int threshold = std::min(SIMILARITY_LENGTH_THRESHOLD, contourA_metre_length) * 0.95;
+				int threshold = std::min(SIMILARITY_LENGTH_THRESHOLD, contourA_metre_length) * 0.75;
 				
 				if (similarity >= threshold) {
 					contourA->set_slope_verified(true, true);
