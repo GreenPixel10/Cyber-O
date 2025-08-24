@@ -14,6 +14,7 @@ class Feature {
 
 		virtual void init() = 0;
 
+		bool some_bullshit_gap_flag = false;
 
 	protected:
 		ofColor col;

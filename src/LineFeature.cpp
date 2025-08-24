@@ -199,11 +199,18 @@ void LineFeature::construct_splines() {
 		if (full_points[index].y < min_coords.y) {min_coords.y = full_points[index].y;}
 	}
 
+	int len = 0;
+	for (int i = 1; i < spline_points.size(); i++) {
+		len += glm::distance(spline_points[i].pos, spline_points[i-1].pos);
+	}
+
 	//auto close looped contours that don't quite meet
 	if (S_CODE == S_CONTOUR) {
-		#define CLOSE_THRESHOLD 20 //metres
+		//let gap handler deal with this? not sure
+		#define AUTO_CLOSE_THRESHOLD 20 //metres
+		#define AUTO_CLOSE_MINSIZE 35 // metres
 		float d = glm::distance(spline_points.front().pos, spline_points.back().pos);
-		if (d < CLOSE_THRESHOLD * 100) {
+		if ((len > AUTO_CLOSE_MINSIZE * 100) && (d < AUTO_CLOSE_THRESHOLD * 100)) {
 			closed = true;
 		}
 	}
@@ -219,7 +226,7 @@ void LineFeature::construct_polyline() {
 		int y = sp.pos.y;
 		line.addVertex(x,y);
 	}
-	line.setClosed(closed);
+	
 }
 
 
@@ -247,7 +254,6 @@ int LineFeature::append_line(LineFeature * lf, bool after) {
 		closed = true;
 		link_next_final = nullptr;
 		link_prev_final = nullptr;
-		std::cout << "what?\n";
 		return 1;
 	}
 
@@ -289,8 +295,10 @@ int LineFeature::append_line(LineFeature * lf, bool after) {
 
 
 void LineFeature::draw() {
-
+	
 	if (merge_tunnel) { return;}
+
+	line.setClosed(closed);
 
 	ofSetLineWidth(get_slope_verified()?5:1);
 

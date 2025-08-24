@@ -25,6 +25,11 @@ void SlopeDetector::detect_slope() {
 
 	
 	detect_contour_gaps();
+
+
+	std::cout << contours[0]->get_debug() << " links prev " << contours[0]->link_prev.size() << " next " << contours[0]->link_next.size() << "\n";
+	//std::cout << contours[1]->get_debug() << " links prev " << contours[1]->link_prev.size() << " next " << contours[1]->link_next.size() << "\n";
+
 	auto_classify_gaps();
 
 	int count = -1;
@@ -89,10 +94,15 @@ void SlopeDetector::set_debug_colours() {
 }
 
 void SlopeDetector::detect_contour_gaps() {
+
+
+	#define DEBUG_GAP_REJECTION false
+
 	for (auto cA : (*features)[S_CONTOUR]) {
 		LineFeature * contourA = dynamic_cast<LineFeature *>(cA);
 
 		if (contourA->get_closed()) {
+			if (DEBUG_GAP_REJECTION) std::cout << "cloased A\n";
 			continue;
 		}
 
@@ -108,12 +118,14 @@ void SlopeDetector::detect_contour_gaps() {
 		glm::vec2 cA_evec = glm::normalize(cA_e - cA_e2);
 
 		for (auto cB : (*features)[S_CONTOUR]) {
+			bool loop = false;
 			if (cB == cA) {
-				continue;
+				loop = true;
 			}
 			LineFeature * contourB = dynamic_cast<LineFeature *>(cB);
 
 			if (contourB->get_closed()) {
+				if (DEBUG_GAP_REJECTION) std::cout << "closed B\n";
 				continue;
 			}
 
@@ -136,81 +148,119 @@ void SlopeDetector::detect_contour_gaps() {
 			int es_dist = glm::distance(cA_e, cB_s);
 			int ee_dist = glm::distance(cA_e, cB_e);
 
-#define _START 1
-#define _END 0
+			#define _START 1
+			#define _END 0
 
-			int A_side = (std::min(ss_dist, se_dist) < std::min(es_dist, ee_dist)) ? _START : _END;
-			int B_side;
+			for (int i = 0; i < 2; i++) {
 
-			if (A_side == _START) {
-				B_side = (ss_dist < se_dist) ? _START : _END;
-			}
-			if (A_side == _END) {
-				B_side = (es_dist < ee_dist) ? _START : _END;
-			}
+				int A_side = 1-i;
+				int B_side;
 
-			bool aligned = (A_side != B_side); //aligned if A and B are connected at different ends
-
-			//get endpoints
-			glm::vec2 P = A_side == _START ? cA_s : cA_e;
-			glm::vec2 Q = B_side == _START ? cB_s : cB_e;
-
-			int dist = glm::distance(P, Q);
-
-//skip if too far apart
-#define CONTOUR_GAP_CLOSE 30 //metres
-			if (dist > CONTOUR_GAP_CLOSE * 100) {
-				continue;
-			}
-
-			//get rough endpoint extension vectors
-			glm::vec2 Pv = A_side == _START ? cA_svec : cA_evec;
-			glm::vec2 Qv = B_side == _START ? cB_svec : cB_evec;
-
-			glm::vec2 Pex = P + (Pv * (dist / 2));
-			glm::vec2 Qex = Q + (Qv * (dist / 2));
-
-#define CONTOUR_ANGLE_THRESHOLD -0.4f //
-#define CONTOUR_TOUCHING_THRESHOLD 1 //metre
-			float dot = glm::dot(Pv, Qv);
-			if (dot > CONTOUR_ANGLE_THRESHOLD && dist > CONTOUR_TOUCHING_THRESHOLD * 100) {
-				continue;
-			}
-
-			glm::vec2 ideal_midpoint = (Q + P) / 2;
-
-			int variance = std::max(glm::distance(Pex, ideal_midpoint), glm::distance(Qex, ideal_midpoint));
-
-#define CONTOUR_GAP_VARIANCE_THRESHOLD 20 //metres
-
-			float distance_factor = (float)dist / ((float)CONTOUR_GAP_CLOSE * 100);
-			float variance_multiplier = 1.0f - distance_factor;
-	
-			if (variance < variance_multiplier * (CONTOUR_GAP_VARIANCE_THRESHOLD * 100)) {
-
-				
-				GapLink* gl = new GapLink(contourB, aligned, variance);
-
-				if (A_side == _START) {		
-						contourA->link_prev.push_back(gl);	
+				if (A_side == _START) {
+					B_side = (ss_dist < se_dist) ? _START : _END;
 				}
 				if (A_side == _END) {
-						contourA->link_next.push_back(gl);	
+					B_side = (es_dist < ee_dist) ? _START : _END;
+				}
+				if (loop) {
+					if (cA->some_bullshit_gap_flag) {
+						B_side = _END;
+						A_side = _START;
+					}
+					else {
+						B_side = _START;
+						A_side = _END;
+					}
+
+					cA->some_bullshit_gap_flag = true;
 				}
 
+				bool aligned = (A_side != B_side); //aligned if A and B are connected at different ends
+
+				//get endpoints
+				glm::vec2 P = A_side == _START ? cA_s : cA_e;
+				glm::vec2 Q = B_side == _START ? cB_s : cB_e;
+
+				int dist = glm::distance(P, Q);
+
+				//skip if too far apart
+				#define CONTOUR_GAP_CLOSE 35 //metres
+				if (dist > CONTOUR_GAP_CLOSE * 100) {
+					if (DEBUG_GAP_REJECTION) std::cout << "too wide\n";
+					continue;
+				}
+
+				//get rough endpoint extension vectors
+				glm::vec2 Pv = A_side == _START ? cA_svec : cA_evec;
+				glm::vec2 Qv = B_side == _START ? cB_svec : cB_evec;
+
+				glm::vec2 Pex = P + (Pv * (dist / 2));
+				glm::vec2 Qex = Q + (Qv * (dist / 2));
+
+				#define CONTOUR_ANGLE_THRESHOLD -0.4f //
+				#define CONTOUR_TOUCHING_THRESHOLD 1 //metre
+				float dot = glm::dot(Pv, Qv);
+				if (dot > CONTOUR_ANGLE_THRESHOLD && dist > CONTOUR_TOUCHING_THRESHOLD * 100) {
+					if (DEBUG_GAP_REJECTION) std::cout << "bad angle\n";
+					continue;
+				}
+
+				glm::vec2 ideal_midpoint = (Q + P) / 2;
+
+				int variance = std::max(glm::distance(Pex, ideal_midpoint), glm::distance(Qex, ideal_midpoint));
+
+				#define CONTOUR_GAP_VARIANCE_THRESHOLD 20 //metres
+
+				float distance_factor = (float)dist / ((float)CONTOUR_GAP_CLOSE * 100);
+				float variance_multiplier = 1.0f - distance_factor;
+
+				float var_thresh = (CONTOUR_GAP_VARIANCE_THRESHOLD * 100) * variance_multiplier;
+
+				if (variance < var_thresh) {
+
+				
+					GapLink * gl = new GapLink(contourB, aligned, variance * distance_factor);
+
+					if (A_side == _START) {		
+							contourA->link_prev.push_back(gl);	
+					}
+					if (A_side == _END) {
+							contourA->link_next.push_back(gl);	
+					}
+
+				} else {
+					if (DEBUG_GAP_REJECTION) std::cout << variance << " > " << variance_multiplier * (CONTOUR_GAP_VARIANCE_THRESHOLD * 100) << " bad variance\n";
+				}
 			}
 		}
 	}
 
 	//SORT connections by variance (bad to good)
 	for (auto & c : contours) {
-	std::sort(c->link_next.begin(), c->link_next.end(), [](auto & left, auto & right) {
-		return abs(left->variance) > abs(right->variance);
-	});
-	std::sort(c->link_prev.begin(), c->link_prev.end(), [](auto & left, auto & right) {
-		return abs(left->variance) > abs(right->variance);
-	});
+		std::sort(c->link_next.begin(), c->link_next.end(), [](auto & left, auto & right) {
+			return abs(left->variance) > abs(right->variance);
+		});
+		std::sort(c->link_prev.begin(), c->link_prev.end(), [](auto & left, auto & right) {
+			return abs(left->variance) > abs(right->variance);
+		});
+		int last_index;
+
+		#define SO_GOOD_BONUS 0.7f // if the best connection is <.75 of the second best, just say its right idec
+
+		last_index = c->link_next.size() - 1;
+		if (last_index >= 1 && (c->link_next[last_index]->variance <= (c->link_next[last_index - 1]->variance * SO_GOOD_BONUS))) {
+			c->link_next = { c->link_next[last_index]};
+		}
+		last_index = c->link_prev.size() - 1;
+		if (last_index >= 1 && (c->link_prev[last_index]->variance <= (c->link_prev[last_index - 1]->variance * SO_GOOD_BONUS))) {
+			c->link_prev = { c->link_prev[last_index] };
+		}
+
 	}
+
+	
+
+	
 
 }
 
@@ -235,7 +285,7 @@ int SlopeDetector::auto_classify_gaps(bool unambigous_only) {
 			if (unambigous_only && forwardlinks->size() > 1) { continue;}
 
 			if (!forwardlinks->empty()) {
-
+				
 				GapLink * best_single_gaplink = nullptr;
 				std::vector<GapLink *> * backlinks;
 		
