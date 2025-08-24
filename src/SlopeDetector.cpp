@@ -19,31 +19,11 @@ void SlopeDetector::detect_slope() {
 	set_debug_colours();
 
 
-	//repair_contours();
-
-	//align_contours();
-
 	
 	detect_contour_gaps();
-
-
-	std::cout << contours[0]->get_debug() << " links prev " << contours[0]->link_prev.size() << " next " << contours[0]->link_next.size() << "\n";
-	//std::cout << contours[1]->get_debug() << " links prev " << contours[1]->link_prev.size() << " next " << contours[1]->link_next.size() << "\n";
-
 	auto_classify_gaps();
 
-	int count = -1;
-	while (count != 0) {
-		count = 0;
-		for (auto & c : contours) {
-			if (c->link_next_final) {
-				count += c->append_line(c->link_next_final, true);
-			}
-			if (c->link_prev_final) {
-				count += c->append_line(c->link_prev_final, false);
-			}
-		}
-	}
+	fill_gaps();
 
 	int t = 0;
 	for (auto & c : contours) {
@@ -52,9 +32,20 @@ void SlopeDetector::detect_slope() {
 		}
 	}
 
-	std::cout << ">> " << t << " contours exist\n";
+	std::cout << ">> " << t << " valid contours exist\n";
 
-	return;
+
+	for (int i = ((*features)[S_CONTOUR]).size() - 1; i >= 0; i--) {
+		LineFeature * contour = dynamic_cast<LineFeature *>(((*features)[S_CONTOUR])[i]);
+		if (contour->merge_tunnel) {
+			((*features)[S_CONTOUR]).erase(((*features)[S_CONTOUR]).begin() + i);
+		}
+	}
+
+	cast_contours();
+
+	std::cout << ">> " << contours.size() << " total contours exist after deletion\n";
+
 
 	slope_from_directional_points();
 	slope_from_directional_linears();
@@ -341,6 +332,22 @@ int SlopeDetector::auto_classify_gaps(bool unambigous_only) {
 	std::cout << "Semiambigious: " << semiambigous_count << "\n";
 
 	return unambigous_count + semiambigous_count;
+}
+
+void SlopeDetector::fill_gaps() {
+
+	int count = -1;
+	while (count != 0) {
+		count = 0;
+		for (auto & c : contours) {
+			if (c->link_next_final) {
+				count += c->append_line(c->link_next_final, true);
+			}
+			if (c->link_prev_final) {
+				count += c->append_line(c->link_prev_final, false);
+			}
+		}
+	}
 }
 
 

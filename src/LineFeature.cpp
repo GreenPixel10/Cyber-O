@@ -300,13 +300,14 @@ void LineFeature::draw() {
 
 	line.setClosed(closed);
 
-	ofSetLineWidth(get_slope_verified()?5:1);
+	ofSetLineWidth(get_slope_verified()?1:5);
 
 
-	#define HIGHLIGHT_UNVERIFIED true
+	#define HIGHLIGHT_UNVERIFIED false
 
 	if (HIGHLIGHT_UNVERIFIED) {
 		ofSetColor(get_slope_verified() ? col : ofColor::black);
+		ofSetLineWidth(get_slope_verified() ? 5 : 1);
 	}
 	else {
 		ofSetColor(col);

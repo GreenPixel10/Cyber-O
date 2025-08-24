@@ -8,11 +8,11 @@ void ofApp::setup() {
 	init_camera();
 
 
-	load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
+	//load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
 
 
 	//load_map("D:/Projects/OrienteeringSim/bruce.omap");
-	//load_map("D:/Projects/OrienteeringSim/Barrens.omap");
+	load_map("D:/Projects/OrienteeringSim/Barrens.omap");
 	//load_map("D:/Projects/OrienteeringSim/Cite.omap");
 	//load_map("D:/Projects/OrienteeringSim/Green.omap");
 	//load_map("D:/Projects/OrienteeringSim/Cal.omap");
@@ -37,7 +37,7 @@ void ofApp::setup() {
 	sd.detect_slope();
 
 	hb.load_contours(sd.contours);
-	//hb.build();
+	hb.build();
 
 
 
