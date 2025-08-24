@@ -119,6 +119,19 @@ int LineFeature::get_length_at_point(glm::vec2 point) {
 	return -1;
 }
 
+void LineFeature::autoclose_almost_loop() {
+	if (line.size() <= 2) { return;}
+	//auto close looped features that don't quite meet
+	float len = line.getLengthAtIndex(line.size()-1);
+	#define AUTO_CLOSE_THRESHOLD 20 //metres
+	#define AUTO_CLOSE_MINSIZE 35 // metres
+	float d = glm::distance(spline_points.front().pos, spline_points.back().pos);
+	if ((len > AUTO_CLOSE_MINSIZE * 100) && (d < AUTO_CLOSE_THRESHOLD * 100)) {
+		closed = true;
+	}
+
+}
+
 
 void LineFeature::construct_splines() {
 
@@ -204,16 +217,7 @@ void LineFeature::construct_splines() {
 		len += glm::distance(spline_points[i].pos, spline_points[i-1].pos);
 	}
 
-	//auto close looped contours that don't quite meet
-	if (S_CODE == S_CONTOUR) {
-		//let gap handler deal with this? not sure
-		#define AUTO_CLOSE_THRESHOLD 20 //metres
-		#define AUTO_CLOSE_MINSIZE 35 // metres
-		float d = glm::distance(spline_points.front().pos, spline_points.back().pos);
-		if ((len > AUTO_CLOSE_MINSIZE * 100) && (d < AUTO_CLOSE_THRESHOLD * 100)) {
-			closed = true;
-		}
-	}
+
 
 
 

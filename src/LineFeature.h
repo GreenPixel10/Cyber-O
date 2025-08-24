@@ -73,7 +73,7 @@ class LineFeature : public Feature {
 		int get_length_at_point(glm::vec2 point);
 		inline int get_length_at_point(glm::vec3 point) {return get_length_at_point(glm::vec2(point.x, point.y));};
 
-
+		void autoclose_almost_loop();
 
 		inline bool are_all_links_gathered() { return all_links_gathered;}
 		inline void set_all_links_gathered(bool b) { all_links_gathered = b; }

@@ -14,7 +14,7 @@ void ofApp::setup() {
 	//load_map("D:/Projects/OrienteeringSim/bruce.omap");
 	//load_map("D:/Projects/OrienteeringSim/Barrens.omap");
 	//load_map("D:/Projects/OrienteeringSim/Cite.omap");
-	load_map("D:/Projects/OrienteeringSim/Green.omap");
+	//load_map("D:/Projects/OrienteeringSim/Green.omap");
 	//load_map("D:/Projects/OrienteeringSim/Cal.omap");
 
 	
