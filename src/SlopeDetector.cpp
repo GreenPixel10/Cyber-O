@@ -3,7 +3,10 @@
 #include <random>
 
 
-SlopeDetector::SlopeDetector() { }
+SlopeDetector::SlopeDetector() {
+	click_start = {nullptr, false };
+	click_end = { nullptr, false };
+}
 
 
 
@@ -21,6 +24,14 @@ void SlopeDetector::detect_slope() {
 	/* contour merging */
 	detect_contour_gaps(); //find potential gaps
 	auto_classify_gaps(); //sort potential gaps by liklihood and ambiguity
+
+
+
+
+
+}
+
+void SlopeDetector::detect_slope_2() {
 	fill_gaps(); //connect and merge linked contours
 	cleanup_deleted_contours(); //clean up redirect contours left by merge
 	cast_contours(); //regenerate contour list
@@ -37,9 +48,7 @@ void SlopeDetector::detect_slope() {
 	std::cout << get_percent_verified() << "% of contours verified\n";
 	std::cout << get_num_unverified() << " contours could not be verified\n";
 
-
 }
-
 
 void SlopeDetector::cast_contours() {
 	contours.clear();
@@ -240,10 +249,12 @@ void SlopeDetector::detect_contour_gaps() {
 
 		last_index = c->link_next.size() - 1;
 		if (last_index >= 1 && (c->link_next[last_index]->variance <= (c->link_next[last_index - 1]->variance * SO_GOOD_BONUS))) {
+			//c->link_next.clear(); #def a memory leak w/o this but idk why this crashes it
 			c->link_next = { c->link_next[last_index]};
 		}
 		last_index = c->link_prev.size() - 1;
 		if (last_index >= 1 && (c->link_prev[last_index]->variance <= (c->link_prev[last_index - 1]->variance * SO_GOOD_BONUS))) {
+			//c->link_prev.clear();
 			c->link_prev = { c->link_prev[last_index] };
 		}
 
@@ -332,6 +343,32 @@ int SlopeDetector::auto_classify_gaps(bool unambigous_only) {
 	std::cout << "Semiambigious: " << semiambigous_count << "\n";
 
 	return unambigous_count + semiambigous_count;
+}
+
+void SlopeDetector::manual_gaps() {
+	
+	if (click_start.first && click_end.first) {
+		std::cout << "click between " << click_start.first->get_debug() << " and " << click_end.first->get_debug() << "\n";
+
+		if (!click_start.second) {
+			click_start.first->link_prev_final = click_end.first;
+		}
+		else {
+			click_start.first->link_next_final = click_end.first;
+		}
+
+
+		if (!click_end.second) {
+			click_end.first->link_prev_final = click_start.first;
+		}
+		else {
+			click_end.first->link_next_final = click_start.first;
+		}
+
+		click_start = { nullptr, false };
+		click_end = { nullptr, false };
+	}
+	
 }
 
 void SlopeDetector::fill_gaps() {
@@ -547,6 +584,61 @@ std::cout << (*features)[S_CONTOUR].size() << " <<\n";
 
 		std::cout << "verified " << verified_count << " contours via similarity\n";
 	}
+}
+
+void SlopeDetector::get_end_from_click(glm::vec2 pos, bool is_release) {
+
+	bool found = false;
+	bool end_is_next = false;
+	LineFeature* selection = nullptr;
+	
+	for (auto& c : contours) {
+		
+		glm::vec2 start = c->get_line().getPointAtPercent(0);
+		glm::vec2 end = c->get_line().getPointAtPercent(100);
+
+		#define CLICK_CLOSE 5 //metres
+		int s_distance = glm::distance(pos, start);
+		int e_distance = glm::distance(pos, end);
+		bool s_close = s_distance < ((CLICK_CLOSE * 100));
+		bool e_close = e_distance < ((CLICK_CLOSE * 100));
+		if (s_close) {
+			found = true;
+			end_is_next = false;
+			selection = c;
+			break;
+		}
+		if (e_close) {
+			found = true;
+			end_is_next = true;
+			selection = c;
+			break;
+		}
+	}
+
+	if (!found) {
+		std::cout << "resetting\n";
+		if (is_release) { //if nothing found on the end click, clear everything (invalid gap)
+			click_start = {nullptr, false };
+			click_end = { nullptr, false };
+		}
+		return;
+	}
+
+
+	if (!is_release) { //click (gap start)
+		click_start = {selection, end_is_next};
+		std::cout << "valid click\n";
+		std::cout << selection << "\n";
+	}
+	
+	if (is_release) { //release (gap end)
+		click_end = { selection, end_is_next };
+		std::cout << "valid release\n";
+		std::cout << selection << "\n";
+	}
+
+
 }
 
 void SlopeDetector::apply_contour_leaners() {

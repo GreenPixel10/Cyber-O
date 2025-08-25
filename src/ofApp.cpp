@@ -4,6 +4,8 @@
 //--------------------------------------------------------------
 void ofApp::setup() {
 
+	state = LOADING;
+
 	ofBackground(255, 255, 255);
 	init_camera();
 
@@ -33,12 +35,12 @@ void ofApp::setup() {
 		t->construct_point();
 	}
 
+	state = SLOPE1;
+
 	sd.set_features(&features);
 	sd.detect_slope();
 
-	hb.load_contours(sd.contours);
-	hb.build();
-
+	state = GAPS;
 
 
 
@@ -250,9 +252,18 @@ void ofApp::update(){
 
 	camera.setScale(zoom);
 
-	///glm::vec3 cam_pos = camera.getPosition();
-	//std::cout << cam_pos.x << ", " << cam_pos.y << ", " << zoom << "\n";
-	//std::cout << line_features[0].min_coords.x << ", " << line_features[0].min_coords.y << "\n\n";
+	if (state == GAPS) {
+		sd.manual_gaps();
+	}
+
+	if (state == DEM) {
+		hb.load_contours(sd.contours);
+		hb.build();
+		state = IDLE;
+	}
+
+
+
 }
 
 //--------------------------------------------------------------
@@ -349,14 +360,25 @@ void ofApp::mousePressed(int x, int y, int button){
 		pan_mouse_pos = glm::vec3(x,y,0);
 		pan_cam_pos = camera.getPosition();
 	}
+
+	if (button == 0) {
+		glm::vec2 wpos = camera.screenToWorld(glm::vec3(x, y, 0));
+		sd.get_end_from_click(wpos, false);
+	}
 	
 }
 
 //--------------------------------------------------------------
 void ofApp::mouseReleased(int x, int y, int button){
+
 	if (button == 1) {
 		panning = false;
 		ofShowCursor();
+	}
+
+	if (button == 0) {
+		glm::vec2 wpos = camera.screenToWorld(glm::vec3(x, y, 0));
+		sd.get_end_from_click(wpos, true);
 	}
 }
 

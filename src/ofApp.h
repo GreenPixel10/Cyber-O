@@ -11,6 +11,15 @@
 #define win_w 1024
 #define win_h 1024
 
+enum STATE {
+	LOADING,
+	SLOPE1,
+	GAPS,
+	SLOPE2,
+	DEM,
+	IDLE
+}; 
+
 class ofApp : public ofBaseApp{
 
 	public:
@@ -64,5 +73,10 @@ class ofApp : public ofBaseApp{
 		bool panning = false;
 		glm::vec3 pan_mouse_pos;
 
+		glm::vec3 left_click_mouse_pos;
+
 		float zoom;
+
+		STATE state;
+
 };

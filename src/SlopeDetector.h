@@ -29,13 +29,17 @@ class SlopeDetector {
 		void autoclose_almost_loops();
 		void detect_contour_gaps();
 		int auto_classify_gaps(bool unambigous_only = true);
+
+		void detect_slope_2();
+		void manual_gaps();
 		void fill_gaps();
 		void cleanup_deleted_contours();
 		void slope_from_directional_points(); //eg. slope tags
 		void slope_from_directional_linears(); //eg. long cliffs
 		void slope_from_closed_loops(); //eg. hilltops
 		void slope_from_similarity();
-		
+
+		void get_end_from_click(glm::vec2 pos, bool is_release);
 
 		void apply_contour_leaners();
 
@@ -49,4 +53,7 @@ class SlopeDetector {
 
 	private:
 		std::map<int, std::vector<Feature *>>* features;
+
+		std::pair<LineFeature*, bool> click_start;
+		std::pair<LineFeature *, bool> click_end;
 };

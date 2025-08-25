@@ -305,17 +305,25 @@ void LineFeature::draw(float zoom) {
 
 	line.setClosed(closed);
 
-	ofSetLineWidth(get_slope_verified()?1:5);
+	ofSetLineWidth(1);
+
+	ofColor render_col = col;
+
+	#define OVERRIDE_COLOUR true
+
+	if (OVERRIDE_COLOUR) {
+		render_col = ofColor::black;
+	}
 
 
 	#define HIGHLIGHT_UNVERIFIED false
 
 	if (HIGHLIGHT_UNVERIFIED) {
-		ofSetColor(get_slope_verified() ? col : ofColor::black);
+		ofSetColor(get_slope_verified() ? render_col : ofColor::black);
 		ofSetLineWidth(get_slope_verified() ? 5 : 1);
 	}
 	else {
-		ofSetColor(col);
+		ofSetColor(render_col);
 	}
 	
 	
@@ -345,18 +353,21 @@ void LineFeature::draw(float zoom) {
 		}
 	}
 
-	int point_size = zoom * 5;
+	int point_size = zoom * 8;
 
 	#define DRAW_GAPS true
-	if (DRAW_GAPS && line.size() >= 2 && !closed) {
+	if (DRAW_GAPS && closed == false) {
+		ofSetColor(ofColor::green);
+		if (link_prev_final) { ofDrawCircle(line[0].x, line[0].y, point_size);}
+		if (link_next_final) { ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, point_size);}
+
 		ofSetColor(ofColor::red);
 		if (!link_prev_final) { ofDrawCircle(line[0].x, line[0].y, point_size);}
-		
 		if (!link_next_final) { ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, point_size);}
 	}
 
 	#define DRAW_ENDPOINTS false
-	if (DRAW_ENDPOINTS && line.size() >= 2) {
+	if (DRAW_ENDPOINTS && line.size() >= 2 ) {
 		ofSetColor(ofColor::green);
 		ofDrawCircle(line[0].x, line[0].y, point_size);
 		ofSetColor(ofColor::red);
@@ -368,18 +379,6 @@ void LineFeature::draw(float zoom) {
 	if (DRAW_LINKS) {
 		ofSetColor(ofColor::cyan);
 
-		/*
-		if (link_prev){
-
-			ofDrawLine(line.getPointAtPercent(0), link_prev->get_line().getPointAtPercent(link_prev_alignment ? 0 : 100));
-		
-		}
-
-		if (link_next){
-
-			ofDrawLine(line.getPointAtPercent(100), link_next->get_line().getPointAtPercent(link_next_alignment ? 100 : 0));
-		}
-		*/
 	}
 
 
