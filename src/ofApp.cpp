@@ -256,6 +256,11 @@ void ofApp::update(){
 		sd.manual_gaps();
 	}
 
+	if (state == SLOPE2) {
+		sd.detect_slope_2();
+		state = DEM; //DEM
+	}
+
 	if (state == DEM) {
 		hb.load_contours(sd.contours);
 		hb.build();
@@ -278,7 +283,7 @@ void ofApp::draw(){
 
 
 #define DRAW_MODE_MAP true
-#define DRAW_MODE_DEM false
+#define DRAW_MODE_DEM true
 
 	int draw_mode = DRAW_MODE_SPECIFIED;
 
@@ -287,7 +292,8 @@ void ofApp::draw(){
 
 
 
-	if (DRAW_MODE_MAP) {
+	if (DRAW_MODE_MAP && state != IDLE) {
+
 		if (draw_mode == DRAW_MODE_SPECIFIED) { //render specified
 			for (auto & ftd : features_to_draw) {
 				for (Feature * f : features[ftd]) {
@@ -311,7 +317,8 @@ void ofApp::draw(){
 
 
 	if (DRAW_MODE_DEM) {
-		hb.draw_triangulation();
+		if (state == IDLE) {hb.draw_triangulation();}
+		
 	}
 
 
@@ -330,6 +337,9 @@ void ofApp::keyPressed(int key){
 
 	if (key == 'e') zoom /= 1.2;
 	if (key == 'q') zoom *= 1.2;
+
+
+	if (key == 'l') state = STATE::SLOPE2;
 }
 
 //--------------------------------------------------------------

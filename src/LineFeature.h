@@ -99,7 +99,9 @@ class LineFeature : public Feature {
 		std::vector< GapLink *> link_prev;
 
 		LineFeature* link_next_final;
+		glm::vec3 link_next_point;
 		LineFeature* link_prev_final;
+		glm::vec3 link_prev_point;
 		LineFeature* merge_tunnel;
 
 

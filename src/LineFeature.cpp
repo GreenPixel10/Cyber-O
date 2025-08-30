@@ -278,11 +278,13 @@ int LineFeature::append_line(LineFeature * lf, bool after) {
 	if (after) {
 		line.addVertices(lf->get_line().getVertices());
 		link_next_final = lf->link_next_final;
+		link_next_point = lf->link_next_point;
 	}
 	else {
 		lf->get_line().addVertices(line.getVertices());
 		line = lf->get_line();
 		link_prev_final = lf->link_prev_final;
+		link_prev_point = lf->link_prev_point;
 	}
 
 	lf->get_line().clear();
@@ -357,13 +359,31 @@ void LineFeature::draw(float zoom) {
 
 	#define DRAW_GAPS true
 	if (DRAW_GAPS && closed == false) {
-		ofSetColor(ofColor::green);
-		if (link_prev_final) { ofDrawCircle(line[0].x, line[0].y, point_size);}
-		if (link_next_final) { ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, point_size);}
-
 		ofSetColor(ofColor::red);
-		if (!link_prev_final) { ofDrawCircle(line[0].x, line[0].y, point_size);}
-		if (!link_next_final) { ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, point_size);}
+
+		glm::vec2 startpos;
+		glm::vec2 endpos;
+
+		ofSetLineWidth(5);
+
+		if (link_prev_final) {
+			startpos = line[0];
+			endpos = link_prev_point;
+			ofDrawLine(startpos, endpos);
+		}
+		if (link_next_final) {
+			startpos = line[line.size() - 1];
+			endpos = link_next_point;
+			ofDrawLine(startpos, endpos);
+		}
+
+
+
+
+		//draw loose ends as red dots
+		//ofSetColor(ofColor::red);
+		//if (!link_prev_final ) { ofDrawCircle(line[0].x, line[0].y, point_size);}
+		//if (!link_next_final) { ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, point_size);}
 	}
 
 	#define DRAW_ENDPOINTS false

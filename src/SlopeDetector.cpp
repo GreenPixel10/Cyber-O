@@ -319,8 +319,14 @@ int SlopeDetector::auto_classify_gaps(bool unambigous_only) {
 				
 				//std::cout << "Linking " << c->get_debug() << " with " << best_single_gaplink->to->get_debug() << "\n";
 				
-				if (i == 0) { c->link_next_final = best_single_gaplink->to;}
-				if (i == 1) { c->link_prev_final = best_single_gaplink->to;}
+				if (i == 0) {
+					c->link_next_final = best_single_gaplink->to;
+					c->link_next_point = c->link_next_final->get_line().getPointAtPercent(best_single_gaplink->is_aligned?0:100);
+				}
+				if (i == 1) {
+					c->link_prev_final = best_single_gaplink->to;
+					c->link_prev_point = c->link_prev_final->get_line().getPointAtPercent(best_single_gaplink->is_aligned ? 100 : 0);
+				}
 
 
 				if (forwardlinks->size() == 1 && backlinks->size() == 1) {unambigous_count++;}
@@ -352,17 +358,21 @@ void SlopeDetector::manual_gaps() {
 
 		if (!click_start.second) {
 			click_start.first->link_prev_final = click_end.first;
+			click_start.first->link_prev_point = click_end.first->get_line().getPointAtPercent(!click_end.second?0:100);
 		}
 		else {
 			click_start.first->link_next_final = click_end.first;
+			click_start.first->link_next_point = click_end.first->get_line().getPointAtPercent(!click_end.second ? 0 : 100);
 		}
 
 
 		if (!click_end.second) {
 			click_end.first->link_prev_final = click_start.first;
+			click_end.first->link_prev_point = click_start.first->get_line().getPointAtPercent(!click_start.second ? 0 : 100);
 		}
 		else {
 			click_end.first->link_next_final = click_start.first;
+			click_end.first->link_next_point = click_start.first->get_line().getPointAtPercent(!click_start.second ? 0 : 100);
 		}
 
 		click_start = { nullptr, false };
