@@ -434,8 +434,8 @@ void LineFeature::draw(float zoom) {
 
 		//draw loose ends as red dots
 		ofSetColor(ofColor::red);
-		if (!manual_link_end && !link_next_final) { ofDrawCircle(line[0].x, line[0].y, point_size);}
-		if (!manual_link_start && !link_prev_final) { ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, point_size);}
+		if (!manual_link_start) { ofDrawCircle(line[0].x, line[0].y, point_size);}
+		if (!manual_link_end) { ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, point_size);}
 	}
 
 	#define DRAW_ENDPOINTS false

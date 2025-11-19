@@ -322,10 +322,13 @@ int SlopeDetector::auto_classify_gaps(bool unambigous_only) {
 				if (i == 0) {
 					c->link_next_final = best_single_gaplink->to;
 					c->link_next_point = c->link_next_final->get_line().getPointAtPercent(best_single_gaplink->is_aligned?0:100);
+					create_manual_link(c, true, best_single_gaplink->to, best_single_gaplink->is_aligned ? false : true);
+
 				}
 				if (i == 1) {
 					c->link_prev_final = best_single_gaplink->to;
 					c->link_prev_point = c->link_prev_final->get_line().getPointAtPercent(best_single_gaplink->is_aligned ? 100 : 0);
+					create_manual_link(c, false, best_single_gaplink->to, best_single_gaplink->is_aligned ? true : false);
 				}
 
 
@@ -365,32 +368,34 @@ void SlopeDetector::manual_gaps() {
 		bool is_end_of_f2 = click_end.second;
 		bool is_start_of_f2 = !click_end.second;
 
-		ManualLink * new_link = new ManualLink(f1, is_end_of_f1 * 100, f2, is_end_of_f2 * 100);
-		
-
-		if (is_start_of_f1) {
-			f1->clear_manual_link_start();
-			f1->manual_link_start = new_link;
-		}
-		else { //if end of LF1
-			f1->clear_manual_link_end();
-			f1->manual_link_end = new_link;
-		}
-
-
-		if (is_start_of_f2) {
-			f2->clear_manual_link_start();
-			f2->manual_link_start = new_link;
-		}
-		else { //if end of LF2
-			f2->clear_manual_link_end();
-			f2->manual_link_end = new_link;
-		}
+		create_manual_link(f1, is_end_of_f1, f2, is_end_of_f2);
 
 		click_start = { nullptr, false };
 		click_end = { nullptr, false };
 	}
 	
+}
+
+void SlopeDetector::create_manual_link(LineFeature * f1, bool is_end_of_f1, LineFeature * f2, bool is_end_of_f2) {
+
+	ManualLink * new_link = new ManualLink(f1, is_end_of_f1 * 100, f2, is_end_of_f2 * 100);
+
+	if (!is_end_of_f1) {
+		f1->clear_manual_link_start();
+		f1->manual_link_start = new_link;
+	} else { //if end of LF1
+		f1->clear_manual_link_end();
+		f1->manual_link_end = new_link;
+	}
+
+	if (!is_end_of_f2) {
+		f2->clear_manual_link_start();
+		f2->manual_link_start = new_link;
+	} else { //if end of LF2
+		f2->clear_manual_link_end();
+		f2->manual_link_end = new_link;
+	}
+
 }
 
 void SlopeDetector::fill_gaps() {

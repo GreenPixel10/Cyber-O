@@ -32,6 +32,7 @@ class SlopeDetector {
 
 		void detect_slope_2();
 		void manual_gaps();
+		void create_manual_link(LineFeature * f1, bool is_end_of_f1, LineFeature * f2, bool is_end_of_f2);
 		void fill_gaps();
 		void cleanup_deleted_contours();
 		void slope_from_directional_points(); //eg. slope tags
