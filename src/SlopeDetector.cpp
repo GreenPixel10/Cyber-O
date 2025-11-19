@@ -368,7 +368,7 @@ void SlopeDetector::manual_gaps() {
 		bool is_end_of_f2 = click_end.second;
 		bool is_start_of_f2 = !click_end.second;
 
-		create_manual_link(f1, is_end_of_f1, f2, is_end_of_f2);
+		create_manual_link(f1, is_end_of_f1, f2, is_end_of_f2, ofColor::lime);
 
 		click_start = { nullptr, false };
 		click_end = { nullptr, false };
@@ -376,9 +376,9 @@ void SlopeDetector::manual_gaps() {
 	
 }
 
-void SlopeDetector::create_manual_link(LineFeature * f1, bool is_end_of_f1, LineFeature * f2, bool is_end_of_f2) {
+void SlopeDetector::create_manual_link(LineFeature * f1, bool is_end_of_f1, LineFeature * f2, bool is_end_of_f2, ofColor colour) {
 
-	ManualLink * new_link = new ManualLink(f1, is_end_of_f1 * 100, f2, is_end_of_f2 * 100);
+	ManualLink * new_link = new ManualLink(f1, is_end_of_f1 * 100, f2, is_end_of_f2 * 100, colour);
 
 	if (!is_end_of_f1) {
 		f1->clear_manual_link_start();

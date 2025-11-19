@@ -394,7 +394,7 @@ void LineFeature::draw(float zoom) {
 
 	#define DRAW_GAPS true
 	if (DRAW_GAPS && closed == false) {
-		ofSetColor(ofColor::red);
+		
 
 		glm::vec2 startpos;
 		glm::vec2 endpos;
@@ -418,6 +418,7 @@ void LineFeature::draw(float zoom) {
 		//draw gaps based on manual bridger
 		
 		if (manual_link_start) {
+			ofSetColor(manual_link_start->colour);
 			//std::cout << manual_link_start->Aperc << " " << manual_link_start->Bperc << "\n";
 			//std::cout << (manual_link_start->A && manual_link_start->B ? "all good" : "uhoh!") << "\n";
 			startpos = manual_link_start->A->get_line().getPointAtPercent(manual_link_start->Aperc);
@@ -425,6 +426,7 @@ void LineFeature::draw(float zoom) {
 			ofDrawLine(startpos, endpos);
 		}
 		if (manual_link_end) {
+			ofSetColor(manual_link_end->colour);
 			//std::cout << manual_link_end->Aperc << " " << manual_link_end->Bperc << "\n";
 			//std::cout << (manual_link_end->A && manual_link_end->B ? "all good" : "uhoh!") << "\n";
 			startpos = manual_link_end->A->get_line().getPointAtPercent(manual_link_end->Aperc);
@@ -458,11 +460,12 @@ void LineFeature::draw(float zoom) {
 
 GapLink::GapLink(LineFeature * to_, bool is_aligned_, int variance_): to(to_), is_aligned(is_aligned_), variance(variance_) {}
 
-ManualLink::ManualLink(LineFeature * A_, int Aperc_, LineFeature * B_, int Bperc_) {
+ManualLink::ManualLink(LineFeature * A_, int Aperc_, LineFeature * B_, int Bperc_, ofColor colour_) {
 	A = A_;
 	Aperc = Aperc_;
 	B = B_;
 	Bperc = Bperc_;
+	colour = colour_;
 
 	if (!A || !B) {
 		std::cout << "Invalid Manual Link Created!!!" << "\n";

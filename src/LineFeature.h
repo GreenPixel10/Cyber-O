@@ -44,12 +44,12 @@ class GapLink {
 class LineFeature;
 class ManualLink {
 public:
-	ManualLink();
-	ManualLink(LineFeature * A_, int Aperc_, LineFeature * B_, int Bperc_);
-	LineFeature *A;
-	int Aperc = -67;
-	LineFeature *B;
-	int Bperc = -67;
+	ManualLink(LineFeature * A_, int Aperc_, LineFeature * B_, int Bperc_, ofColor colour_);
+	LineFeature* A;
+	int Aperc;
+	LineFeature* B;
+	int Bperc;
+	ofColor colour;
 };
 
 enum LINKTYPE {
