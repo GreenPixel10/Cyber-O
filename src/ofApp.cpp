@@ -283,7 +283,7 @@ void ofApp::draw(){
 
 
 #define DRAW_MODE_MAP true
-#define DRAW_MODE_DEM true
+#define DRAW_MODE_DEM false
 
 	int draw_mode = DRAW_MODE_SPECIFIED;
 
@@ -292,7 +292,7 @@ void ofApp::draw(){
 
 
 
-	if (DRAW_MODE_MAP && state != IDLE) {
+	if (DRAW_MODE_MAP && (state != IDLE || !DRAW_MODE_DEM)) {
 
 		if (draw_mode == DRAW_MODE_SPECIFIED) { //render specified
 			for (auto & ftd : features_to_draw) {

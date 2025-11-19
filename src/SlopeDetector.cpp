@@ -320,14 +320,14 @@ int SlopeDetector::auto_classify_gaps(bool unambigous_only) {
 				//std::cout << "Linking " << c->get_debug() << " with " << best_single_gaplink->to->get_debug() << "\n";
 				
 				if (i == 0) {
-					c->link_next_final = best_single_gaplink->to;
-					c->link_next_point = c->link_next_final->get_line().getPointAtPercent(best_single_gaplink->is_aligned?0:100);
+					//c->link_next_final = best_single_gaplink->to;
+					//c->link_next_point = c->link_next_final->get_line().getPointAtPercent(best_single_gaplink->is_aligned?0:100);
 					create_manual_link(c, true, best_single_gaplink->to, best_single_gaplink->is_aligned ? false : true);
 
 				}
 				if (i == 1) {
-					c->link_prev_final = best_single_gaplink->to;
-					c->link_prev_point = c->link_prev_final->get_line().getPointAtPercent(best_single_gaplink->is_aligned ? 100 : 0);
+					//c->link_prev_final = best_single_gaplink->to;
+					//c->link_prev_point = c->link_prev_final->get_line().getPointAtPercent(best_single_gaplink->is_aligned ? 100 : 0);
 					create_manual_link(c, false, best_single_gaplink->to, best_single_gaplink->is_aligned ? true : false);
 				}
 
@@ -399,19 +399,20 @@ void SlopeDetector::create_manual_link(LineFeature * f1, bool is_end_of_f1, Line
 }
 
 void SlopeDetector::fill_gaps() {
-
+	std::cout << "Filling gaps:\n";
 	int count = -1;
 	while (count != 0) {
 		count = 0;
 		for (auto & c : contours) {
-			if (c->link_next_final) {
-				count += c->append_line(c->link_next_final, true);
+			if (c->manual_link_end) {
+				count += c->append_line(c->manual_link_end->get_other_end_from(c), true);
 			}
-			if (c->link_prev_final) {
-				count += c->append_line(c->link_prev_final, false);
+			if (c->manual_link_start) {
+				count += c->append_line(c->manual_link_start->get_other_end_from(c), false);
 			}
 		}
 	}
+	std::cout << "Gap filling complete\n";
 }
 
 void SlopeDetector::cleanup_deleted_contours() {

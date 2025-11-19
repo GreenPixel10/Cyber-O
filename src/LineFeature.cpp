@@ -18,8 +18,8 @@ LineFeature::LineFeature() {
 	link_next = {};
 	link_prev = {};
 	all_links_gathered = false;
-	link_next_final = nullptr;
-	link_prev_final = nullptr;
+	//link_next_final = nullptr;
+	//link_prev_final = nullptr;
 	manual_link_end = nullptr;
 	manual_link_start = nullptr;
 	merge_tunnel = nullptr;
@@ -273,29 +273,46 @@ void LineFeature::construct_polyline() {
 
 void LineFeature::reverse_single_slope() {
 	
-	//std::cout << "Reversing " << debug << "!\n";
+	//std::cout << "Reversing " << debug << "...";
 	std::reverse(line.begin(), line.end());
 	//construct_polyline();
-	std::swap(link_next_final, link_prev_final);
+	std::swap(manual_link_end, manual_link_start);
+	//std::cout << "1";
+	if(manual_link_end){manual_link_end->reverse_feature(this);}
+	//std::cout << "2";
+	if(manual_link_start){manual_link_start->reverse_feature(this);}
+	//std::cout << "3";
 	if (DRAW_SLOPE_FLIPS) {col = ofColor::blue;}
+	//std::cout << "done!\n";
 
 }
 
 int LineFeature::append_line(LineFeature * lf, bool after) {
+	std::cout << "Appending line:\n";
 
+	//std::cout << ((lf) ? "true" : "false") << "uhoh\n";
+	//std::cout << ((lf->merge_tunnel) ? "true" : "false") << "uhoh\n";
 	while (lf->merge_tunnel) {
+		std::cout << "whee\n";
 		lf = lf->merge_tunnel;
-	}
 
+	}
+	std::cout << "0.5";
 	
-	if (line.size() == 0) { return 0;}
+	if (line.size() == 0) {std::cout << "Appended.\n"; return 0;}
+
+	std::cout << "0.75";
 
 	if (lf == this) {
 		closed = true;
-		link_next_final = nullptr;
-		link_prev_final = nullptr;
+		//delete manual_link_end; breaks things, not sure why
+		manual_link_end = nullptr;
+		manual_link_start = nullptr;
+		std::cout << "Appended.\n";
 		return 1;
 	}
+
+	std::cout << "0.8";
 
 	//std::cout << "appending " << lf->get_debug() << " to " << debug << "\n";
 
@@ -304,31 +321,36 @@ int LineFeature::append_line(LineFeature * lf, bool after) {
 	glm::vec3 lf_start = lf->get_line().getPointAtPercent(0);
 	glm::vec3 lf_end = lf->get_line().getPointAtPercent(100);
 
+	std::cout << "1";
+
 	bool closest_part_is_start = glm::distance2(connection_point_A, lf_start) < glm::distance2(connection_point_A, lf_end);
 
 	if ((after && !closest_part_is_start) || (!after && closest_part_is_start)) {
 		lf->reverse_single_slope();
 	}
 
+	std::cout << "2";
+
 	if (after) {
 		line.addVertices(lf->get_line().getVertices());
-		link_next_final = lf->link_next_final;
-		link_next_point = lf->link_next_point;
+		manual_link_end = lf->manual_link_end;
 	}
 	else {
 		lf->get_line().addVertices(line.getVertices());
 		line = lf->get_line();
-		link_prev_final = lf->link_prev_final;
-		link_prev_point = lf->link_prev_point;
+		manual_link_start = lf->manual_link_start;
 	}
 
+	std::cout << "3";
+
 	lf->get_line().clear();
-	lf->link_next_final = nullptr;
-	lf->link_prev_final = nullptr;
+	//lf->clear_manual_link_end();
+	//lf->clear_manual_link_start();
 	lf->merge_tunnel = this;
 	//anything referencing the now-empty feature willr eference the merged one instead
 
 	//construct_polyline();
+	std::cout << " Appended.\n";
 	return 1;
 
 }
@@ -472,5 +494,14 @@ ManualLink::ManualLink(LineFeature * A_, int Aperc_, LineFeature * B_, int Bperc
 	} else {
 		std::cout << "created manual link between " << A->get_debug() << " and " << B->get_debug() << "\n";
 	}
+}
+
+void ManualLink::reverse_feature(LineFeature* f) {
+	if (f == A) { Aperc = Aperc ? 0 : 100;}
+	if (f == B) { Bperc = Bperc ? 0 : 100;}
+}
+
+LineFeature * ManualLink::get_other_end_from(LineFeature * f) {
+	return (f == A) ? B : A;
 }
 

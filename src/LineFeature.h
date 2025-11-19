@@ -45,6 +45,8 @@ class LineFeature;
 class ManualLink {
 public:
 	ManualLink(LineFeature * A_, int Aperc_, LineFeature * B_, int Bperc_, ofColor colour_);
+	void reverse_feature(LineFeature * f);
+	LineFeature * get_other_end_from(LineFeature *f);
 	LineFeature* A;
 	int Aperc;
 	LineFeature* B;
@@ -114,10 +116,10 @@ class LineFeature : public Feature {
 		ManualLink* manual_link_start;
 		ManualLink * manual_link_end;
 
-		LineFeature* link_next_final;
-		glm::vec3 link_next_point;
-		LineFeature* link_prev_final;
-		glm::vec3 link_prev_point;
+		//LineFeature* link_next_final;
+		//glm::vec3 link_next_point;
+		//LineFeature* link_prev_final;
+		//glm::vec3 link_prev_point;
 		LineFeature* merge_tunnel;
 
 
