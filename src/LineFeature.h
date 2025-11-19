@@ -41,6 +41,16 @@ class GapLink {
 		int variance;
 };
 
+class LineFeature;
+class ManualLink {
+public:
+	ManualLink();
+	ManualLink(LineFeature * A_, int Aperc_, LineFeature * B_, int Bperc_);
+	LineFeature *A;
+	int Aperc = -67;
+	LineFeature *B;
+	int Bperc = -67;
+};
 
 enum LINKTYPE {
 	NONE,
@@ -78,6 +88,9 @@ class LineFeature : public Feature {
 		inline bool are_all_links_gathered() { return all_links_gathered;}
 		inline void set_all_links_gathered(bool b) { all_links_gathered = b; }
 
+		void clear_manual_link_start();
+		void clear_manual_link_end();
+
 		void construct_splines();
 		void construct_polyline();
 		void draw(float zoom);
@@ -97,6 +110,9 @@ class LineFeature : public Feature {
 
 		std::vector < GapLink *> link_next;
 		std::vector< GapLink *> link_prev;
+
+		ManualLink* manual_link_start;
+		ManualLink * manual_link_end;
 
 		LineFeature* link_next_final;
 		glm::vec3 link_next_point;

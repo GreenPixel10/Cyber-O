@@ -20,6 +20,8 @@ LineFeature::LineFeature() {
 	all_links_gathered = false;
 	link_next_final = nullptr;
 	link_prev_final = nullptr;
+	manual_link_end = nullptr;
+	manual_link_start = nullptr;
 	merge_tunnel = nullptr;
 }
 
@@ -131,6 +133,39 @@ void LineFeature::autoclose_almost_loop() {
 	}
 	//std::cout << "close check: " << d << " vs " << AUTO_CLOSE_THRESHOLD * 100 << "\n";
 
+}
+
+
+void LineFeature::clear_manual_link_start() {
+	if (manual_link_start) {
+		LineFeature * A = manual_link_start->A;
+		LineFeature * B = manual_link_start->B;
+		LineFeature* f2 = (A == this)?B:A; //find the other feature
+		int f2_perc = (A == this) ? manual_link_start->Bperc : manual_link_start->Aperc; //find which end of the other feature is linked to this one
+
+		if (f2_perc) { f2->manual_link_end = nullptr;} else{f2->manual_link_start = nullptr;} //remove that link reference for f2
+
+		delete manual_link_start; //delete the link from the heap
+		manual_link_start = nullptr; //clear the reference for this feature
+	}
+}
+
+void LineFeature::clear_manual_link_end() {
+	if (manual_link_end) {
+		LineFeature * A = manual_link_end->A;
+		LineFeature * B = manual_link_end->B;
+		LineFeature * f2 = (A == this) ? B : A; //find the other feature
+		int f2_perc = (A == this) ? manual_link_end->Bperc : manual_link_end->Aperc; //find which end of the other feature is linked to this one
+
+		if (f2_perc) { //100, ie. end
+			f2->manual_link_end = nullptr;
+		} else {
+			f2->manual_link_start = nullptr;
+		} //remove that link reference for f2
+
+		delete manual_link_end; //delete the link from the heap
+		manual_link_end = nullptr; //clear the reference for this feature
+	}
 }
 
 
@@ -366,6 +401,8 @@ void LineFeature::draw(float zoom) {
 
 		ofSetLineWidth(5);
 
+		//draw gaps based on auto bridger
+		/*
 		if (link_prev_final) {
 			startpos = line[0];
 			endpos = link_prev_point;
@@ -376,14 +413,29 @@ void LineFeature::draw(float zoom) {
 			endpos = link_next_point;
 			ofDrawLine(startpos, endpos);
 		}
+		*/
 
-
-
+		//draw gaps based on manual bridger
+		
+		if (manual_link_start) {
+			//std::cout << manual_link_start->Aperc << " " << manual_link_start->Bperc << "\n";
+			//std::cout << (manual_link_start->A && manual_link_start->B ? "all good" : "uhoh!") << "\n";
+			startpos = manual_link_start->A->get_line().getPointAtPercent(manual_link_start->Aperc);
+			endpos = manual_link_start->B->get_line().getPointAtPercent(manual_link_start->Bperc);
+			ofDrawLine(startpos, endpos);
+		}
+		if (manual_link_end) {
+			//std::cout << manual_link_end->Aperc << " " << manual_link_end->Bperc << "\n";
+			//std::cout << (manual_link_end->A && manual_link_end->B ? "all good" : "uhoh!") << "\n";
+			startpos = manual_link_end->A->get_line().getPointAtPercent(manual_link_end->Aperc);
+			endpos = manual_link_end->B->get_line().getPointAtPercent(manual_link_end->Bperc);
+			ofDrawLine(startpos, endpos);
+		}
 
 		//draw loose ends as red dots
-		//ofSetColor(ofColor::red);
-		//if (!link_prev_final ) { ofDrawCircle(line[0].x, line[0].y, point_size);}
-		//if (!link_next_final) { ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, point_size);}
+		ofSetColor(ofColor::red);
+		if (!manual_link_end && !link_next_final) { ofDrawCircle(line[0].x, line[0].y, point_size);}
+		if (!manual_link_start && !link_prev_final) { ofDrawCircle(line[line.size() - 1].x, line[line.size() - 1].y, point_size);}
 	}
 
 	#define DRAW_ENDPOINTS false
@@ -405,3 +457,17 @@ void LineFeature::draw(float zoom) {
 }
 
 GapLink::GapLink(LineFeature * to_, bool is_aligned_, int variance_): to(to_), is_aligned(is_aligned_), variance(variance_) {}
+
+ManualLink::ManualLink(LineFeature * A_, int Aperc_, LineFeature * B_, int Bperc_) {
+	A = A_;
+	Aperc = Aperc_;
+	B = B_;
+	Bperc = Bperc_;
+
+	if (!A || !B) {
+		std::cout << "Invalid Manual Link Created!!!" << "\n";
+	} else {
+		std::cout << "created manual link between " << A->get_debug() << " and " << B->get_debug() << "\n";
+	}
+}
+

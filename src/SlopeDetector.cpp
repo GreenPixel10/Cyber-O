@@ -356,23 +356,35 @@ void SlopeDetector::manual_gaps() {
 	if (click_start.first && click_end.first) {
 		std::cout << "click between " << click_start.first->get_debug() << " and " << click_end.first->get_debug() << "\n";
 
-		if (!click_start.second) {
-			click_start.first->link_prev_final = click_end.first;
-			click_start.first->link_prev_point = click_end.first->get_line().getPointAtPercent(!click_end.second?0:100);
+
+		LineFeature * f1 = click_start.first;
+		LineFeature * f2 = click_end.first;
+
+		bool is_end_of_f1 = click_start.second;
+		bool is_start_of_f1 = !click_start.second;
+		bool is_end_of_f2 = click_end.second;
+		bool is_start_of_f2 = !click_end.second;
+
+		ManualLink * new_link = new ManualLink(f1, is_end_of_f1 * 100, f2, is_end_of_f2 * 100);
+		
+
+		if (is_start_of_f1) {
+			f1->clear_manual_link_start();
+			f1->manual_link_start = new_link;
 		}
-		else {
-			click_start.first->link_next_final = click_end.first;
-			click_start.first->link_next_point = click_end.first->get_line().getPointAtPercent(!click_end.second ? 0 : 100);
+		else { //if end of LF1
+			f1->clear_manual_link_end();
+			f1->manual_link_end = new_link;
 		}
 
 
-		if (!click_end.second) {
-			click_end.first->link_prev_final = click_start.first;
-			click_end.first->link_prev_point = click_start.first->get_line().getPointAtPercent(!click_start.second ? 0 : 100);
+		if (is_start_of_f2) {
+			f2->clear_manual_link_start();
+			f2->manual_link_start = new_link;
 		}
-		else {
-			click_end.first->link_next_final = click_start.first;
-			click_end.first->link_next_point = click_start.first->get_line().getPointAtPercent(!click_start.second ? 0 : 100);
+		else { //if end of LF2
+			f2->clear_manual_link_end();
+			f2->manual_link_end = new_link;
 		}
 
 		click_start = { nullptr, false };

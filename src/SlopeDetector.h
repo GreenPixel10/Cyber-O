@@ -56,4 +56,5 @@ class SlopeDetector {
 
 		std::pair<LineFeature*, bool> click_start;
 		std::pair<LineFeature *, bool> click_end;
+
 };
