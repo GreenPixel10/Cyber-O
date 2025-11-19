@@ -377,6 +377,20 @@ void HeightMapBuilder::draw_triangulation() {
 
 }
 
+void HeightMapBuilder::draw_DEM() {
+
+	
+
+	for (auto & d : demps) {
+	
+		ofColor c = d->contour->contour->get_colour();
+		ofSetColor(c);
+		ofDrawCircle(d->pos.x, d->pos.y, 5000);
+	}
+
+
+}
+
 demp::demp(glm::vec2 pos_, simpleContour * contour_): pos(pos_), contour(contour_), visited(false){
 }
 

@@ -283,7 +283,8 @@ void ofApp::draw(){
 
 
 #define DRAW_MODE_MAP true
-#define DRAW_MODE_DEM false
+#define DRAW_MODE_DEM true
+#define DRAW_MODE_TRI false
 
 	int draw_mode = DRAW_MODE_SPECIFIED;
 
@@ -292,7 +293,7 @@ void ofApp::draw(){
 
 
 
-	if (DRAW_MODE_MAP && (state != IDLE || !DRAW_MODE_DEM)) {
+	if (DRAW_MODE_MAP && state != IDLE) {
 
 		if (draw_mode == DRAW_MODE_SPECIFIED) { //render specified
 			for (auto & ftd : features_to_draw) {
@@ -316,12 +317,14 @@ void ofApp::draw(){
 	}
 
 
-	if (DRAW_MODE_DEM) {
+	if (DRAW_MODE_TRI) {
 		if (state == IDLE) {hb.draw_triangulation();}
 		
 	}
 
-
+	if (DRAW_MODE_DEM) {
+		if (state == IDLE) {hb.draw_DEM();}
+	}
 
 	camera.end();
 

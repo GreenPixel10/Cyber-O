@@ -288,31 +288,31 @@ void LineFeature::reverse_single_slope() {
 }
 
 int LineFeature::append_line(LineFeature * lf, bool after) {
-	std::cout << "Appending line:\n";
+	//std::cout << "Appending line:\n";
 
 	//std::cout << ((lf) ? "true" : "false") << "uhoh\n";
 	//std::cout << ((lf->merge_tunnel) ? "true" : "false") << "uhoh\n";
 	while (lf->merge_tunnel) {
-		std::cout << "whee\n";
+		//std::cout << "whee\n";
 		lf = lf->merge_tunnel;
 
 	}
-	std::cout << "0.5";
+	//std::cout << "0.5";
 	
-	if (line.size() == 0) {std::cout << "Appended.\n"; return 0;}
+	if (line.size() == 0) { return 0;}
 
-	std::cout << "0.75";
+	//std::cout << "0.75";
 
 	if (lf == this) {
 		closed = true;
 		//delete manual_link_end; breaks things, not sure why
 		manual_link_end = nullptr;
 		manual_link_start = nullptr;
-		std::cout << "Appended.\n";
+		//std::cout << "Appended.\n";
 		return 1;
 	}
 
-	std::cout << "0.8";
+	//std::cout << "0.8";
 
 	//std::cout << "appending " << lf->get_debug() << " to " << debug << "\n";
 
@@ -321,7 +321,7 @@ int LineFeature::append_line(LineFeature * lf, bool after) {
 	glm::vec3 lf_start = lf->get_line().getPointAtPercent(0);
 	glm::vec3 lf_end = lf->get_line().getPointAtPercent(100);
 
-	std::cout << "1";
+	//std::cout << "1";
 
 	bool closest_part_is_start = glm::distance2(connection_point_A, lf_start) < glm::distance2(connection_point_A, lf_end);
 
@@ -329,7 +329,7 @@ int LineFeature::append_line(LineFeature * lf, bool after) {
 		lf->reverse_single_slope();
 	}
 
-	std::cout << "2";
+	//std::cout << "2";
 
 	if (after) {
 		line.addVertices(lf->get_line().getVertices());
@@ -341,7 +341,7 @@ int LineFeature::append_line(LineFeature * lf, bool after) {
 		manual_link_start = lf->manual_link_start;
 	}
 
-	std::cout << "3";
+	//std::cout << "3";
 
 	lf->get_line().clear();
 	//lf->clear_manual_link_end();
@@ -350,7 +350,7 @@ int LineFeature::append_line(LineFeature * lf, bool after) {
 	//anything referencing the now-empty feature willr eference the merged one instead
 
 	//construct_polyline();
-	std::cout << " Appended.\n";
+	//std::cout << " Appended.\n";
 	return 1;
 
 }

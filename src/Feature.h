@@ -6,6 +6,7 @@ class Feature {
 	public:
 		Feature();
 		inline void set_colour(ofColor c){col = c;}
+		inline ofColor get_colour() {return col; }
 		inline void set_S_CODE(int S_CODE_) { S_CODE = S_CODE_;}
 		inline int get_S_CODE() { return S_CODE; }
 		inline std::string get_debug() { return debug;}
