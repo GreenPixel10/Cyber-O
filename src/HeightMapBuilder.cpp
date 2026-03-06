@@ -408,6 +408,8 @@ void HeightMapBuilder::generate_mesh() {
 
 	int shrink = 1000;
 
+
+	//get offsets so mesh isnt crazy far away
 	double min_x = 99999999999999;
 	double min_y = 99999999999999;
 
@@ -416,6 +418,7 @@ void HeightMapBuilder::generate_mesh() {
 		if (v->get_y() < min_y) { min_y = v->get_y();}
 	}
 
+	//write all vertices into .obj
 	int ind = 1;
 	for (auto& v : demps) {
 		v->obj_vertex_index = ind;
@@ -423,24 +426,36 @@ void HeightMapBuilder::generate_mesh() {
 
 		double x = (v->get_x() - min_x) / shrink;
 		double y = (v->get_y() - min_y) / shrink;
+		int elevation = v->contour->elevation;
 
-		mesh << "v " << x << " " << 0 << " " << y << "\n";
+		mesh << "v " << x << " " << elevation << " " << y << "\n";
 	}
+	int bad = 0;
 
+	//write all faces into .obj
 	for (auto & t : cdt.triangles) {
 		CDT::VertInd i1 = t.vertices[0];
 		CDT::VertInd i2 = t.vertices[1];
 		CDT::VertInd i3 = t.vertices[2];
 
+		//std::cout << i1 << " " << i2 << " " << i3;
+		if (i1 >= demps.size() || i2 >= demps.size() || i3 >= demps.size()) {
+			//std::cout << "...aborted\n";
+			bad++;
+			continue;
+		}
 		demp* v1 = demps[i1];
 		demp * v2 = demps[i2];
 		demp * v3 = demps[i3];
+		//std::cout << "...done\n";
 
 
 		mesh << "f " << v1->obj_vertex_index << " " << v2->obj_vertex_index << " " << v3->obj_vertex_index << "\n";
 
 
 	}
+
+	std::cout << bad << " out of " << cdt.triangles.size() << " triangles were ignored (invalid vertex index)\n";
 	
 	mesh.close();
 }
