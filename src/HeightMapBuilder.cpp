@@ -24,47 +24,13 @@ void HeightMapBuilder::build() {
 	calculate_slopes();
 	
 	generate_confidence_graph();
+
+
+	traverse_graph();
+
+	normalize_elevations();
+
 	
-	simpleContour * origin = bottleneck();
-
-	std::cout << "propagate\n";
-
-	//simpleContour* origin = simple_contours[50];
-	origin->elevation = 0;
-	origin->propagate_elevation();
-
-	std::cout << "\n";
-
-	int lowest = INT_MAX;
-	int highest = INT_MIN;
-
-	int count = 0;
-	for (auto & c : simple_contours) {
-		if (c->elevation == -6969) {count++; continue;}
-		lowest = std::min(lowest, c->elevation);
-		highest = std::max(highest, c->elevation);
-
-	}
-	std::cout << "error: " << count << "\n";
-	std::cout << lowest << " -> " << highest << "\n";
-
-	highest = INT_MIN;
-	for (auto & c : simple_contours) {
-
-		c->elevation += (- lowest);
-		highest = std::max(highest, c->elevation);
-	}
-
-	float col_scale = 255.0f/(float)highest;
-	std::cout << highest << "m\n";
-	for (auto & c : simple_contours) {
-		if (c->elevation == -6969) {
-			c->contour->set_colour(ofColor::red);
-			continue;
-		}
-		ofColor height = ofColor(c->elevation * col_scale, 175, c->elevation * col_scale);
-		c->contour->set_colour(height);
-	}
 	
 }
 
@@ -344,7 +310,62 @@ simpleContour * HeightMapBuilder::bottleneck() {
 }
 
 
+void HeightMapBuilder::traverse_graph() {
+	simpleContour * origin = bottleneck();
 
+	std::cout << "propagate\n";
+
+	//simpleContour* origin = simple_contours[50];
+	origin->elevation = 0;
+	origin->propagate_elevation();
+
+	std::cout << "\n";
+}
+
+void HeightMapBuilder::normalize_elevations() {
+
+	//find highet and lowest in graph
+
+	int lowest = INT_MAX;
+	int highest = INT_MIN;
+
+	int count = 0;
+	for (auto & c : simple_contours) {
+		if (c->elevation == -6969) {
+			count++;
+			continue;
+		}
+		lowest = std::min(lowest, c->elevation);
+		highest = std::max(highest, c->elevation);
+	}
+
+
+	std::cout << "error: " << count << "\n";
+	std::cout << lowest << " -> " << highest << "\n";
+
+	//adjust so lowest is at 0m
+
+	highest = INT_MIN;
+	for (auto & c : simple_contours) {
+
+		c->elevation += (-lowest);
+		highest = std::max(highest, c->elevation);
+	}
+
+
+	//apply colours
+
+	float col_scale = 255.0f / (float)highest;
+	std::cout << highest << "m\n";
+	for (auto & c : simple_contours) {
+		if (c->elevation == -6969) {
+			c->contour->set_colour(ofColor::red);
+			continue;
+		}
+		ofColor height = ofColor(c->elevation * col_scale, 175, c->elevation * col_scale);
+		c->contour->set_colour(height);
+	}
+}
 
 void HeightMapBuilder::draw_triangulation() {
 		
