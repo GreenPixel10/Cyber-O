@@ -10,7 +10,7 @@ void ofApp::setup() {
 	init_camera();
 
 
-	load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
+	//ad_map("D:/Projects/OrienteeringSim/CampFortune.omap");
 
 
 	//load_map("D:/Projects/OrienteeringSim/bruce.omap");
@@ -20,7 +20,7 @@ void ofApp::setup() {
 	//load_map("D:/Projects/OrienteeringSim/Cal.omap");
 
 	
-	//load_map("D:/Projects/OrienteeringSim/test2.omap");
+	load_map("D:/Projects/OrienteeringSim/test2.omap");
 
 
 
@@ -283,8 +283,8 @@ void ofApp::draw(){
 
 
 #define DRAW_MODE_MAP true
-#define DRAW_MODE_DEM true
-#define DRAW_MODE_TRI false
+#define DRAW_MODE_DEM false //splatting
+#define DRAW_MODE_TRI true
 
 	int draw_mode = DRAW_MODE_SPECIFIED;
 

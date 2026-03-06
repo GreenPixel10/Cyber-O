@@ -7,6 +7,7 @@
 #include "LineFeature.h"
 #include "SymbolManager.h"
 #include <iostream>
+#include <fstream> 
 
 #include "CDT.h"
 
@@ -40,6 +41,8 @@ class demp {
 
 		std::vector<demedge*> connections;
 		bool visited;
+
+		int obj_vertex_index = -1;
 
 		
 
@@ -104,6 +107,7 @@ class HeightMapBuilder {
 
 		void draw_triangulation();
 		void draw_DEM();
+		void generate_mesh();
 
 	private:
 

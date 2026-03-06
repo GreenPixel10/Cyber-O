@@ -25,10 +25,11 @@ void HeightMapBuilder::build() {
 	
 	generate_confidence_graph();
 
-
 	traverse_graph();
 
 	normalize_elevations();
+
+	generate_mesh();
 
 	
 	
@@ -257,7 +258,8 @@ simpleContour * HeightMapBuilder::bottleneck() {
 		}
 	}
 	if (!source) {
-		std::cout << "uhoh2\n";
+		std::cout << "uhoh2 - no source found for bottleneck pathfinding?\n";
+		return nullptr;
 	}
 	source->confidence_distance = INT_MAX;
 	while (true) {
@@ -396,6 +398,51 @@ void HeightMapBuilder::draw_triangulation() {
 			
 		}
 
+}
+
+void HeightMapBuilder::generate_mesh() {
+
+	std::cout << "generating mesh:\n";
+
+	std::ofstream mesh("D:/Projects/OrienteeringSim/models/mesh.obj");
+
+	int shrink = 1000;
+
+	double min_x = 99999999999999;
+	double min_y = 99999999999999;
+
+	for (auto & v : demps) {
+		if (v->get_x() < min_x) { min_x = v->get_x();}
+		if (v->get_y() < min_y) { min_y = v->get_y();}
+	}
+
+	int ind = 1;
+	for (auto& v : demps) {
+		v->obj_vertex_index = ind;
+		ind++;
+
+		double x = (v->get_x() - min_x) / shrink;
+		double y = (v->get_y() - min_y) / shrink;
+
+		mesh << "v " << x << " " << 0 << " " << y << "\n";
+	}
+
+	for (auto & t : cdt.triangles) {
+		CDT::VertInd i1 = t.vertices[0];
+		CDT::VertInd i2 = t.vertices[1];
+		CDT::VertInd i3 = t.vertices[2];
+
+		demp* v1 = demps[i1];
+		demp * v2 = demps[i2];
+		demp * v3 = demps[i3];
+
+
+		mesh << "f " << v1->obj_vertex_index << " " << v2->obj_vertex_index << " " << v3->obj_vertex_index << "\n";
+
+
+	}
+	
+	mesh.close();
 }
 
 void HeightMapBuilder::draw_DEM() {
