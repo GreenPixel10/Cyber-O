@@ -21,26 +21,31 @@ class SlopeDetector {
 		SlopeDetector();
 		inline void set_features(std::map<int, std::vector<Feature *>> * features_) {features = features_; }
 
-
+		void prepass_gaps();
 		void cast_contours();
-		void detect_slope();
 		void set_debug_colours();
 		void print_contour_amount(bool only_valid = false);
 		void autoclose_almost_loops();
 		void detect_contour_gaps();
 		int auto_classify_gaps(bool unambigous_only = true);
 
-		void detect_slope_2();
 		void manual_gaps();
+		void get_end_from_click(glm::vec2 pos, bool is_release);
 		void create_manual_link(LineFeature * f1, bool is_end_of_f1, LineFeature * f2, bool is_end_of_f2, ofColor colour = ofColor::blue);
+
+		void manage_gaps();
 		void fill_gaps();
 		void cleanup_deleted_contours();
+
+		void auto_detect_slope();
 		void slope_from_directional_points(); //eg. slope tags
 		void slope_from_directional_linears(); //eg. long cliffs
 		void slope_from_closed_loops(); //eg. hilltops
 		void slope_from_similarity();
 
-		void get_end_from_click(glm::vec2 pos, bool is_release);
+		void manual_detect_slope();
+
+
 
 		void apply_contour_leaners();
 

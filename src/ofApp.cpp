@@ -10,7 +10,7 @@ void ofApp::setup() {
 	init_camera();
 
 
-	load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
+	//load_map("D:/Projects/OrienteeringSim/CampFortune.omap");
 
 
 	//load_map("D:/Projects/OrienteeringSim/bruce.omap");
@@ -20,7 +20,7 @@ void ofApp::setup() {
 	//load_map("D:/Projects/OrienteeringSim/Cal.omap");
 
 	
-	//load_map("D:/Projects/OrienteeringSim/test2.omap");
+	load_map("D:/Projects/OrienteeringSim/test2.omap");
 
 
 
@@ -35,10 +35,10 @@ void ofApp::setup() {
 		t->construct_point();
 	}
 
-	state = SLOPE1;
+	//state = SLOPE1;
 
 	sd.set_features(&features);
-	sd.detect_slope();
+	sd.prepass_gaps();
 
 	state = GAPS;
 
@@ -254,11 +254,17 @@ void ofApp::update(){
 
 	if (state == GAPS) {
 		sd.manual_gaps();
+		//wait for input to continue
 	}
 
-	if (state == SLOPE2) {
-		sd.detect_slope_2();
-		state = DEM; //DEM
+	if (state == AUTO_SLOPES) {
+		
+		sd.manage_gaps();
+		state = AUTO_SLOPES;
+		sd.auto_detect_slope();
+		state = MANUAL_SLOPES;
+		sd.manual_detect_slope();
+		//wait for input to continue
 	}
 
 	if (state == DEM) {
@@ -342,7 +348,8 @@ void ofApp::keyPressed(int key){
 	if (key == 'q') zoom *= 1.2;
 
 
-	if (key == 'l') state = STATE::SLOPE2;
+	if (key == 'l') state = STATE::AUTO_SLOPES;
+	if (key == 'm') state = STATE::DEM;
 }
 
 //--------------------------------------------------------------

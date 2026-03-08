@@ -402,6 +402,8 @@ void HeightMapBuilder::draw_triangulation() {
 
 void HeightMapBuilder::generate_mesh() {
 
+	int original_num_points = demps.size();
+
 	std::cout << "generating mesh:\n";
 
 	std::ofstream mesh("D:/Projects/OrienteeringSim/models/mesh.obj");
@@ -432,6 +434,8 @@ void HeightMapBuilder::generate_mesh() {
 	}
 	int bad = 0;
 
+
+
 	//write all faces into .obj
 	for (auto & t : cdt.triangles) {
 		CDT::VertInd i1 = t.vertices[0];
@@ -439,7 +443,7 @@ void HeightMapBuilder::generate_mesh() {
 		CDT::VertInd i3 = t.vertices[2];
 
 		//std::cout << i1 << " " << i2 << " " << i3;
-		if (i1 >= demps.size() || i2 >= demps.size() || i3 >= demps.size()) {
+		if (i1 >= original_num_points || i2 >= original_num_points || i3 >= original_num_points) {
 			//std::cout << "...aborted\n";
 			bad++;
 			continue;

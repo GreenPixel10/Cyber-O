@@ -398,7 +398,7 @@ void LineFeature::draw(float zoom) {
 	line.draw();
 	
 	#define DRAW_TAGS true
-	#define DRAW_TAGS_ALWAYS false
+	#define DRAW_TAGS_ALWAYS true
 	if (DRAW_TAGS && (DRAW_TAGS_ALWAYS || get_slope_verified())) {
 		for (int i = 1; i < line.size(); i++) {
 			glm::vec2 p = line[i];

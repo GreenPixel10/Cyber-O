@@ -12,7 +12,7 @@ SlopeDetector::SlopeDetector() {
 
 
 
-void SlopeDetector::detect_slope() {
+void SlopeDetector::prepass_gaps() {
 
 
 	/* setup */
@@ -31,12 +31,16 @@ void SlopeDetector::detect_slope() {
 
 }
 
-void SlopeDetector::detect_slope_2() {
+void SlopeDetector::manage_gaps() {
 	fill_gaps(); //connect and merge linked contours
 	cleanup_deleted_contours(); //clean up redirect contours left by merge
 	cast_contours(); //regenerate contour list
 	autoclose_almost_loops(); //second autoloop pass
 	print_contour_amount(); //contour count after merges
+}
+
+void SlopeDetector::auto_detect_slope() {
+
 
 	/* slope detetction */
 	slope_from_directional_points(); //slope from eg. slope tags
@@ -48,6 +52,9 @@ void SlopeDetector::detect_slope_2() {
 	std::cout << get_percent_verified() << "% of contours verified\n";
 	std::cout << get_num_unverified() << " contours could not be verified\n";
 
+}
+
+void SlopeDetector::manual_detect_slope() {
 }
 
 void SlopeDetector::cast_contours() {
@@ -560,8 +567,8 @@ void SlopeDetector::slope_from_closed_loops() {
 }
 
 void SlopeDetector::slope_from_similarity() {
-
-std::cout << (*features)[S_CONTOUR].size() << " <<\n";
+return;
+//std::cout << (*features)[S_CONTOUR].size() << " <<\n";
 
 #define SIMILARITY_LENGTH_THRESHOLD 175 //metres
 
