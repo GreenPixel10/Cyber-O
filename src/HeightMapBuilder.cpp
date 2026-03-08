@@ -434,7 +434,8 @@ void HeightMapBuilder::generate_mesh() {
 	}
 	int bad = 0;
 
-
+	std::vector<demp*> mesh_vertices = demps;
+	std::vector<string> faces_buffer;
 
 	//write all faces into .obj
 	for (auto & t : cdt.triangles) {
@@ -448,18 +449,53 @@ void HeightMapBuilder::generate_mesh() {
 			bad++;
 			continue;
 		}
-		demp* v1 = demps[i1];
-		demp * v2 = demps[i2];
-		demp * v3 = demps[i3];
+		demp * v1 = mesh_vertices[i1];
+		demp * v2 = mesh_vertices[i2];
+		demp * v3 = mesh_vertices[i3];
+
+		glm::vec3 A = glm::vec3(v1->pos, v1->contour->elevation);
+		glm::vec3 B = glm::vec3(v2->pos, v2->contour->elevation);
+		glm::vec3 C = glm::vec3(v3->pos, v3->contour->elevation);
+
+		glm::vec3 D = (A + B) / 2;
+		glm::vec3 E = (B + C) / 2;
+		glm::vec3 F = (C + A) / 2;
+
+		//demp * v4 = new demp(glm::vec2(D.x, D.y), nullptr);
+		//demp * v5 = new demp(glm::vec2(E.x, E.y), nullptr);
+		//demp * v6 = new demp(glm::vec2(F.x, F.y), nullptr);
+
+		mesh << "v " << (D.x - min_x) / shrink << " " << D.z << " " << (D.y - min_y) / shrink << "\n";
+		mesh << "v " << (E.x - min_x) / shrink << " " << E.z << " " << (E.y - min_y) / shrink << "\n";
+		mesh << "v " << (F.x - min_x) / shrink << " " << F.z << " " << (F.y - min_y) / shrink << "\n";
+
 		//std::cout << "...done\n";
 
+		string ADF = "f " + to_string(v1->obj_vertex_index) + " " + to_string(ind) + " " + to_string(ind + 2) + "\n";
+		string BED = "f " + to_string(v2->obj_vertex_index) + " " + to_string(ind + 1) + " " + to_string(ind) + "\n";
+		string CFE = "f " + to_string(v3->obj_vertex_index) + " " + to_string(ind + 2) + " " + to_string(ind + 1) + "\n";
+		string DEF = "f " + to_string(ind) + " " + to_string(ind + 1) + " " + to_string(ind + 2) + "\n";
 
-		mesh << "f " << v1->obj_vertex_index << " " << v2->obj_vertex_index << " " << v3->obj_vertex_index << "\n";
+		faces_buffer.push_back(ADF);
+		faces_buffer.push_back(BED);
+		faces_buffer.push_back(CFE);
+		faces_buffer.push_back(DEF);
+
+		ind += 3;
+
+
+		//mesh << "f " << v1->obj_vertex_index << " " << v2->obj_vertex_index << " " << v3->obj_vertex_index << "\n";
 
 
 	}
 
+
+	for (auto& f : faces_buffer) {
+		mesh << f;
+	}
+
 	std::cout << bad << " out of " << cdt.triangles.size() << " triangles were ignored (invalid vertex index)\n";
+	//caused by overlap
 	
 	mesh.close();
 }
