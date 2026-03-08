@@ -84,6 +84,8 @@ class LineFeature : public Feature {
 
 		int get_length_at_point(glm::vec2 point);
 		inline int get_length_at_point(glm::vec3 point) {return get_length_at_point(glm::vec2(point.x, point.y));};
+		inline int get_index_at_point(glm::vec3 point) { return get_line().getIndexAtLength(get_length_at_point(point));}
+		inline int get_index_at_point(glm::vec2 point) { return get_index_at_point(glm::vec3(point, 0)); }
 
 		void autoclose_almost_loop();
 

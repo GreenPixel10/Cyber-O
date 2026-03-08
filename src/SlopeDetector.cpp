@@ -75,7 +75,7 @@ void SlopeDetector::set_debug_colours() {
 
 		auto f = (*features)[S_CONTOUR][i];
 		f->set_colour(cols[i % numcols]);
-		f->set_debug(colnames[i % numcols]);
+		//f->set_debug(colnames[i % numcols]);
 	}
 }
 

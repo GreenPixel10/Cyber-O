@@ -169,24 +169,44 @@ void HeightMapBuilder::calculate_slopes() {
 
 
 		if (slope1 == slope2) {
+
+			e->shape = -slope1; //bump or a valley
+			/*
+			if (e->v1->contour == e->v2->contour) { //edge might have been part of an original contour (should not have bump or valley)
+				LineFeature * c = e->v1->contour->contour;
+				int i1 = c->get_index_at_point(p1); //these are not working
+				int i2 = c->get_index_at_point(p2);
+
+				bool beside = abs(i1 - i2) <= 1;
+				std::cout << i1 << " " << i2 << "\n";
+				bool ends = (i1 == 0 && i2 == c->get_line().size()) || (i2 == 0 && i1 == c->get_line().size());
+
+				if (beside || ends) {
+					e->shape = 2; //contour
+				}
+			}
+			*/
 			continue;
 		}
 
 		e->slope = slope1;
+		
 	}
 }
 
 void HeightMapBuilder::generate_confidence_graph() {
 	std::cout << "gen confidence graph\n";
-	for (auto & c : simple_contours) {
-		for (auto & d : demps) {
-			for (auto & e : d->connections) {
-				if (e->v1->contour != c && e->v2->contour != c) {
-					continue;
+	for (auto & c : simple_contours) { //for every contour
+		for (auto & d : demps) { //for every point
+			for (auto & e : d->connections) { //for every edge connection to that point
+
+				
+				if (e->v1->contour != c && e->v2->contour != c) { //if both ends of the edge aren't on c, skip
+					continue;	//(not relavant connection)
 				}
 
-				if (e->v1->contour == c && e->v2->contour == c) {
-					continue;
+				if (e->v1->contour == c && e->v2->contour == c) { //if both ends of the edge ARE on c, skip
+					continue; //(both on the same contour, must be 0 slope)
 				}
 
 				
@@ -202,13 +222,16 @@ void HeightMapBuilder::generate_confidence_graph() {
 					slope = -(e->slope);
 				}
 
+				std::cout << "SLOPE: " << slope << "\n";
+
 				link * new_link = c->get_link_by_contour(connected_to);
 				if (new_link == nullptr) {
 					c->links.push_back(new link(connected_to, 1, slope));
-					//std::cout << c->contour->get_debug() << " " << connected_to->contour->get_debug() << "\n";
+					std::cout << c->contour->get_debug() << " " << connected_to->contour->get_debug() << " " << slope << "\n";
 				} else {
 					new_link->slope += slope;
 					new_link->confidence++;
+					std::cout << c->contour->get_debug() << " to " << connected_to->contour->get_debug() << " modified to " << new_link->slope << "\n";
 				}
 			}
 		}
@@ -361,11 +384,11 @@ void HeightMapBuilder::normalize_elevations() {
 	std::cout << highest << "m\n";
 	for (auto & c : simple_contours) {
 		if (c->elevation == -6969) {
-			c->contour->set_colour(ofColor::red);
+			/////////////////////////c->contour->set_colour(ofColor::red);
 			continue;
 		}
 		ofColor height = ofColor(c->elevation * col_scale, 175, c->elevation * col_scale);
-		c->contour->set_colour(height);
+		/////////////////c->contour->set_colour(height);
 	}
 }
 
@@ -388,10 +411,10 @@ void HeightMapBuilder::draw_triangulation() {
 			demp * d1 = te->v1;
 			demp * d2 = te->v2;
 
-			std::vector<ofColor> cols = {ofColor::red, ofColor::grey, ofColor::pink};
+			std::vector<ofColor> cols = {ofColor::red, ofColor::grey, ofColor::blue, ofColor::brown};
 			
-			ofSetColor(cols[te->slope+1]);
-
+			ofSetColor(cols[te->shape+1]);
+			//ofSetColor(te->v1->contour->contour->get_colour());
 
 			//ofSetColor((te->slope)?ofColor::red : ofColor::green);
 			ofDrawLine(d1->pos, d2->pos);
@@ -461,9 +484,32 @@ void HeightMapBuilder::generate_mesh() {
 		glm::vec3 E = (B + C) / 2;
 		glm::vec3 F = (C + A) / 2;
 
-		//demp * v4 = new demp(glm::vec2(D.x, D.y), nullptr);
-		//demp * v5 = new demp(glm::vec2(E.x, E.y), nullptr);
-		//demp * v6 = new demp(glm::vec2(F.x, F.y), nullptr);
+
+
+		if (A.z == B.z && B.z == C.z) {
+
+			int doff = 0;
+			int eoff = 0;
+			int foff = 0;
+
+			for (auto & e : tri_edges) {
+				if ((e->v1 == v1 && e->v2 == v2) || (e->v1 == v2 && e->v2 == v1)) {
+					doff = e->shape;
+				}
+				if ((e->v1 == v2 && e->v2 == v3) || (e->v1 == v3 && e->v2 == v2)) {
+					eoff = e->shape;
+				}
+				if ((e->v1 == v3 && e->v2 == v1) || (e->v1 == v1 && e->v2 == v3)) {
+					foff = e->shape;
+				}
+			}
+			float mult = 0.5;
+			std::cout << doff << " " << eoff << " " << foff << "\n";
+			if(true){D.z -= doff * mult;}
+			if(true){E.z -= eoff * mult;}
+			if(true){F.z -= foff * mult;}
+
+		}
 
 		mesh << "v " << (D.x - min_x) / shrink << " " << D.z << " " << (D.y - min_y) / shrink << "\n";
 		mesh << "v " << (E.x - min_x) / shrink << " " << E.z << " " << (E.y - min_y) / shrink << "\n";
@@ -471,15 +517,22 @@ void HeightMapBuilder::generate_mesh() {
 
 		//std::cout << "...done\n";
 
+		string ABC = "f " + to_string(v1->obj_vertex_index) + " " + to_string(v2->obj_vertex_index) + " " + to_string(v3->obj_vertex_index) + "\n";
+
 		string ADF = "f " + to_string(v1->obj_vertex_index) + " " + to_string(ind) + " " + to_string(ind + 2) + "\n";
 		string BED = "f " + to_string(v2->obj_vertex_index) + " " + to_string(ind + 1) + " " + to_string(ind) + "\n";
 		string CFE = "f " + to_string(v3->obj_vertex_index) + " " + to_string(ind + 2) + " " + to_string(ind + 1) + "\n";
 		string DEF = "f " + to_string(ind) + " " + to_string(ind + 1) + " " + to_string(ind + 2) + "\n";
 
-		faces_buffer.push_back(ADF);
-		faces_buffer.push_back(BED);
-		faces_buffer.push_back(CFE);
-		faces_buffer.push_back(DEF);
+		#define SUBDIV true
+		if (SUBDIV) {
+			faces_buffer.push_back(ADF);
+			faces_buffer.push_back(BED);
+			faces_buffer.push_back(CFE);
+			faces_buffer.push_back(DEF);
+		} else {
+			faces_buffer.push_back(ABC);
+		}
 
 		ind += 3;
 

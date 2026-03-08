@@ -55,6 +55,7 @@ class demedge {
 		demp* v1;
 		demp* v2;
 		int slope;
+		int shape = 0;
 		
 
 };
