@@ -56,6 +56,7 @@ class demedge {
 		demp* v2;
 		int slope;
 		int shape = 0;
+		int is_contour = false;
 		
 
 };

@@ -31,7 +31,19 @@ void HeightMapBuilder::build() {
 
 	generate_mesh();
 
-	
+	int count = 0;
+	for (auto & a : cdt.fixedEdges) {
+		for (auto & b : tri_edges) {
+
+			if ((demps[a.v1()] == b->v1 && demps[a.v2()] == b->v2) || (demps[a.v1()] == b->v2 && demps[a.v2()] == b->v1)) {
+				count++;
+				b->shape = -1;
+			}
+		
+		}
+	}
+	//std::cout << constrained_edges.size() << " - " << tri_edges.size() << "\n";
+	std::cout << "COUNT--- " << count << "\n";
 	
 }
 
@@ -142,6 +154,7 @@ void HeightMapBuilder::triangulate() {
 		}
 
 		demedge* new_edge = new demedge(i1, i2, d1, d2);
+
 		
 		tri_edges.push_back(new_edge);
 
@@ -158,7 +171,7 @@ void HeightMapBuilder::calculate_slopes() {
 		glm::vec2 p2 = e->v2->pos;
 
 		if (e->v1->contour == e->v2->contour) {
-			continue;
+			//continue;
 		}
 
 		glm::vec2 v12 = p2 - p1;
@@ -222,16 +235,16 @@ void HeightMapBuilder::generate_confidence_graph() {
 					slope = -(e->slope);
 				}
 
-				std::cout << "SLOPE: " << slope << "\n";
+				//std::cout << "SLOPE: " << slope << "\n";
 
 				link * new_link = c->get_link_by_contour(connected_to);
 				if (new_link == nullptr) {
 					c->links.push_back(new link(connected_to, 1, slope));
-					std::cout << c->contour->get_debug() << " " << connected_to->contour->get_debug() << " " << slope << "\n";
+					//std::cout << c->contour->get_debug() << " " << connected_to->contour->get_debug() << " " << slope << "\n";
 				} else {
 					new_link->slope += slope;
 					new_link->confidence++;
-					std::cout << c->contour->get_debug() << " to " << connected_to->contour->get_debug() << " modified to " << new_link->slope << "\n";
+					//std::cout << c->contour->get_debug() << " to " << connected_to->contour->get_debug() << " modified to " << new_link->slope << "\n";
 				}
 			}
 		}
@@ -504,7 +517,7 @@ void HeightMapBuilder::generate_mesh() {
 				}
 			}
 			float mult = 0.5;
-			std::cout << doff << " " << eoff << " " << foff << "\n";
+			//std::cout << doff << " " << eoff << " " << foff << "\n";
 			if(true){D.z -= doff * mult;}
 			if(true){E.z -= eoff * mult;}
 			if(true){F.z -= foff * mult;}
