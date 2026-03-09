@@ -30,9 +30,16 @@ void HeightMapBuilder::build() {
 	normalize_elevations();
 
 
+	std::cout << constrained_edges.size() << " - " << tri_edges.size() << "\n";
+	std::cout << constrained_edges.size() * tri_edges.size() << "\n";
+
+	int total = constrained_edges.size() * tri_edges.size();
+
 	int count = 0;
-	for (auto & a : cdt.fixedEdges) {
-		for (auto & b : tri_edges) {
+	float num = 0;
+	for (auto & b : tri_edges){
+		//std::cout << (int)(num / tri_edges.size() * 100) << "%\n";
+		for (auto & a : cdt.fixedEdges) {
 
 			if (b->v1->contour != b->v2->contour) { continue;} //cant be a contour line if both ends are diff contours
 			if (a.v1() >= demps.size() || a.v2() >= demps.size()) { continue;} //invalid overlaps
@@ -40,14 +47,15 @@ void HeightMapBuilder::build() {
 			if ((demps[a.v1()] == b->v1 && demps[a.v2()] == b->v2) || (demps[a.v1()] == b->v2 && demps[a.v2()] == b->v1)) {
 				//count++;
 				b->shape = 0;
+				break;
 			}
 
-			ofPolyline line = b->v1->contour->contour->get_line();
-			glm::vec2 line_start = line.getPointAtPercent(0);
-			glm::vec2 line_end = line.getPointAtPercent(100);
+			//ofPolyline line = b->v1->contour->contour->get_line();
+			//glm::vec2 line_start = line.getPointAtPercent(0);
+			//glm::vec2 line_end = line.getPointAtPercent(100);
 
-			glm::vec2 start = b->v1->pos;
-			glm::vec2 end = b->v2->pos;
+			//glm::vec2 start = b->v1->pos;
+			//glm::vec2 end = b->v2->pos;
 
 			//if ((line_start == start && line_end == end) || (line_start == end && line_end == start)) {
 				//count++;
@@ -56,7 +64,7 @@ void HeightMapBuilder::build() {
 			//if (b->v1->pos == b->v1->contour->contour->get_line().getPointAtPercent(0).
 		}
 	}
-	std::cout << constrained_edges.size() << " - " << tri_edges.size() << "\n";
+	
 	std::cout << "COUNT--- " << count << "\n";
 
 
@@ -513,6 +521,7 @@ void HeightMapBuilder::generate_mesh() {
 		double y = (v->get_y() - min_y) / shrink;
 		int elevation = v->contour->elevation;
 
+		//add in all the original vertices
 		mesh << "v " << x << " " << elevation << " " << y << "\n";
 	}
 	int bad = 0;
@@ -520,33 +529,41 @@ void HeightMapBuilder::generate_mesh() {
 	std::vector<demp*> mesh_vertices = demps;
 	std::vector<string> faces_buffer;
 
-	//write all faces into .obj
+	//write all faces into buffer
 	for (auto & t : cdt.triangles) {
+
+
+		//indexes of 3 primary vertices
 		CDT::VertInd i1 = t.vertices[0];
 		CDT::VertInd i2 = t.vertices[1];
 		CDT::VertInd i3 = t.vertices[2];
 
-		//std::cout << i1 << " " << i2 << " " << i3;
+		//check for issues from removed overlap vertices
 		if (i1 >= original_num_points || i2 >= original_num_points || i3 >= original_num_points) {
 			//std::cout << "...aborted\n";
 			bad++;
 			continue;
 		}
+
+		//point objects
 		demp * v1 = mesh_vertices[i1];
 		demp * v2 = mesh_vertices[i2];
 		demp * v3 = mesh_vertices[i3];
 
+		//point positions
 		glm::vec3 A = glm::vec3(v1->pos, v1->contour->elevation);
 		glm::vec3 B = glm::vec3(v2->pos, v2->contour->elevation);
 		glm::vec3 C = glm::vec3(v3->pos, v3->contour->elevation);
 
+		//secondary positions
 		glm::vec3 D = (A + B) / 2;
 		glm::vec3 E = (B + C) / 2;
 		glm::vec3 F = (C + A) / 2;
 
 
 
-		if (A.z == B.z && B.z == C.z) {
+		//if (A.z == B.z && B.z == C.z) {
+		if (true){
 
 			int doff = 0;
 			int eoff = 0;

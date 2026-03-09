@@ -567,7 +567,7 @@ void SlopeDetector::slope_from_closed_loops() {
 }
 
 void SlopeDetector::slope_from_similarity() {
-return;
+//return;
 //std::cout << (*features)[S_CONTOUR].size() << " <<\n";
 
 #define SIMILARITY_LENGTH_THRESHOLD 175 //metres
