@@ -39,6 +39,8 @@ class demp {
 		glm::vec2 nextV;
 		glm::vec2 lastV;
 
+		int ID;
+
 		std::vector<demedge*> connections;
 		bool visited;
 

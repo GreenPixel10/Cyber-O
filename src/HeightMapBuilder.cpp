@@ -29,21 +29,40 @@ void HeightMapBuilder::build() {
 
 	normalize_elevations();
 
-	generate_mesh();
 
 	int count = 0;
 	for (auto & a : cdt.fixedEdges) {
 		for (auto & b : tri_edges) {
 
+			if (b->v1->contour != b->v2->contour) { continue;} //cant be a contour line if both ends are diff contours
+			if (a.v1() >= demps.size() || a.v2() >= demps.size()) { continue;} //invalid overlaps
+
 			if ((demps[a.v1()] == b->v1 && demps[a.v2()] == b->v2) || (demps[a.v1()] == b->v2 && demps[a.v2()] == b->v1)) {
-				count++;
-				b->shape = -1;
+				//count++;
+				b->shape = 0;
 			}
-		
+
+			ofPolyline line = b->v1->contour->contour->get_line();
+			glm::vec2 line_start = line.getPointAtPercent(0);
+			glm::vec2 line_end = line.getPointAtPercent(100);
+
+			glm::vec2 start = b->v1->pos;
+			glm::vec2 end = b->v2->pos;
+
+			//if ((line_start == start && line_end == end) || (line_start == end && line_end == start)) {
+				//count++;
+			//}
+
+			//if (b->v1->pos == b->v1->contour->contour->get_line().getPointAtPercent(0).
 		}
 	}
-	//std::cout << constrained_edges.size() << " - " << tri_edges.size() << "\n";
+	std::cout << constrained_edges.size() << " - " << tri_edges.size() << "\n";
 	std::cout << "COUNT--- " << count << "\n";
+
+
+	generate_mesh();
+
+
 	
 }
 
@@ -51,9 +70,15 @@ void HeightMapBuilder::process_raw_contours() {
 
 	int id = 0;
 	for (auto & c : simple_contours) {
+	
 		ofPolyline line = c->contour->get_line();
-		for (int i = 0; i < line.size(); i++) {
+		std::cout << line.size() << "\n ";
 
+		demp* last_demp = nullptr;
+		demp* start_demp = nullptr;
+
+		for (int i = 0; i < line.size(); i++) {
+			//std::cout << i << "-----<\n";
 
 			glm::vec2 last;
 			glm::vec2 next;
@@ -84,23 +109,45 @@ void HeightMapBuilder::process_raw_contours() {
 				next = line[i+1];
 			}
 
-			bool exists = false;
+			demp* exists = nullptr;
+
 			for (auto& d : demps) {
 				if (d->get_x() == p.x && d->get_y() == p.y) {
-					exists = true;
+					exists = d; //don't think this really ever happens?
 					break;
 				}
 			}
-			if (exists) { continue;}
 
-			demp * new_demp = new demp(p, c);
-			new_demp->calculate_slope_ranges(last, next);
-			demps.push_back(new_demp);
+			demp * new_demp;
 
+			if (exists) { new_demp = exists;}
+			else {
+				new_demp = new demp(p, c);
+				new_demp->calculate_slope_ranges(last, next);
+				new_demp->ID = demps.size();
+				demps.push_back(new_demp);
+			}
+
+
+			if (i == 0) {
+				start_demp = new_demp;
+			}
 
 			if (i > 0) {
-				constrained_edges.push_back(new demedge(demps.size() - 1, demps.size() - 2));
+				constrained_edges.push_back(new demedge(new_demp->ID, last_demp->ID));
+				
+				std::cout << "adding from " << new_demp->ID << " to " << last_demp->ID << "\n";
 			}
+
+			//if the loop is closed also add the last edge
+			if (c->contour->get_closed() && i == line.size() - 1) {
+				
+				constrained_edges.push_back(new demedge(new_demp->ID, start_demp->ID));
+				std::cout << "adding from " << new_demp->ID << " to " << start_demp->ID << "\n";
+				std::cout << glm::distance(new_demp->pos, start_demp->pos) << "------dist\n";
+			}
+
+			last_demp = new_demp;
 		}
 		id++;
 	}
