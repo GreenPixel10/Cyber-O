@@ -29,48 +29,11 @@ void HeightMapBuilder::build() {
 
 	normalize_elevations();
 
-
-	std::cout << constrained_edges.size() << " - " << tri_edges.size() << "\n";
-	std::cout << constrained_edges.size() * tri_edges.size() << "\n";
-
-	int total = constrained_edges.size() * tri_edges.size();
-
-	int count = 0;
-	float num = 0;
-	for (auto & b : tri_edges){
-		//std::cout << (int)(num / tri_edges.size() * 100) << "%\n";
-		for (auto & a : cdt.fixedEdges) {
-
-			if (b->v1->contour != b->v2->contour) { continue;} //cant be a contour line if both ends are diff contours
-			if (a.v1() >= demps.size() || a.v2() >= demps.size()) { continue;} //invalid overlaps
-
-			if ((demps[a.v1()] == b->v1 && demps[a.v2()] == b->v2) || (demps[a.v1()] == b->v2 && demps[a.v2()] == b->v1)) {
-				//count++;
-				b->shape = 0;
-				break;
-			}
-
-			//ofPolyline line = b->v1->contour->contour->get_line();
-			//glm::vec2 line_start = line.getPointAtPercent(0);
-			//glm::vec2 line_end = line.getPointAtPercent(100);
-
-			//glm::vec2 start = b->v1->pos;
-			//glm::vec2 end = b->v2->pos;
-
-			//if ((line_start == start && line_end == end) || (line_start == end && line_end == start)) {
-				//count++;
-			//}
-
-			//if (b->v1->pos == b->v1->contour->contour->get_line().getPointAtPercent(0).
-		}
-	}
-	
-	std::cout << "COUNT--- " << count << "\n";
-
+	calculate_shapes();
 
 	generate_mesh();
 
-
+	std::cout << "\nAll done!\n";
 	
 }
 
@@ -80,7 +43,7 @@ void HeightMapBuilder::process_raw_contours() {
 	for (auto & c : simple_contours) {
 	
 		ofPolyline line = c->contour->get_line();
-		std::cout << line.size() << "\n ";
+		//std::cout << line.size() << "\n "; #num of points in contour
 
 		demp* last_demp = nullptr;
 		demp* start_demp = nullptr;
@@ -144,15 +107,16 @@ void HeightMapBuilder::process_raw_contours() {
 			if (i > 0) {
 				constrained_edges.push_back(new demedge(new_demp->ID, last_demp->ID));
 				
-				std::cout << "adding from " << new_demp->ID << " to " << last_demp->ID << "\n";
+				//std::cout << "adding from " << new_demp->ID << " to " << last_demp->ID << "\n";
+				//edge debug
 			}
 
 			//if the loop is closed also add the last edge
 			if (c->contour->get_closed() && i == line.size() - 1) {
 				
 				constrained_edges.push_back(new demedge(new_demp->ID, start_demp->ID));
-				std::cout << "adding from " << new_demp->ID << " to " << start_demp->ID << "\n";
-				std::cout << glm::distance(new_demp->pos, start_demp->pos) << "------dist\n";
+				//std::cout << "adding from " << new_demp->ID << " to " << start_demp->ID << "\n";
+				//std::cout << glm::distance(new_demp->pos, start_demp->pos) << "------dist\n";
 			}
 
 			last_demp = new_demp;
@@ -163,16 +127,16 @@ void HeightMapBuilder::process_raw_contours() {
 
 void HeightMapBuilder::triangulate() {
 
+	std::cout << "Triangulating map:\n";
+	
 
-
-
-	std::cout << "inserting vertices\n";
+	std::cout << "    Inserting vertices\n";
 	cdt.insertVertices(demps.begin(), demps.end(),
 		[](const demp* p) { return p->pos.x; },
 		[](const demp* p){ return p->pos.y; }
 	);
 
-	std::cout << "inserting edges\n";
+	std::cout << "    Inserting edges\n";
 	cdt.insertEdges(
 		constrained_edges.begin(),
 		constrained_edges.end(),
@@ -180,18 +144,18 @@ void HeightMapBuilder::triangulate() {
 		[](const demedge * e) { return e->vertices.second; }
 	);
 	
-	std::cout << "erasing supertriangle\n";
+	std::cout << "    Erasing supertriangle\n";
 	cdt.eraseSuperTriangle();
 
 	//auto tris = cdt.triangles;
 	//auto verts = cdt.vertices;
 	//auto bounds = cdt.fixedEdges;
 
-	std::cout << "extracting edges\n";
+	std::cout << "    Extracting edges\n";
 	edges = CDT::extractEdgesFromTriangles(cdt.triangles);
 
 
-	std::cout << "gen connections\n";
+	std::cout << "    Generating connections\n";
 	for (auto & e : edges) {
 		CDT::VertInd i1 = e.v1();
 		CDT::VertInd i2 = e.v2();
@@ -217,10 +181,12 @@ void HeightMapBuilder::triangulate() {
 		d2->connections.push_back(new_edge);
 		
 	}
+
+	//std::cout << "Triangulation complete\n";
 }
 
 void HeightMapBuilder::calculate_slopes() {
-	std::cout << "calculate slopes\n";
+	std::cout << "Calculating connection slopes...";
 	for (auto & e : tri_edges) {
 		glm::vec2 p1 = e->v1->pos;
 		glm::vec2 p2 = e->v2->pos;
@@ -260,10 +226,12 @@ void HeightMapBuilder::calculate_slopes() {
 		e->slope = slope1;
 		
 	}
+
+	std::cout << " Done\n";
 }
 
 void HeightMapBuilder::generate_confidence_graph() {
-	std::cout << "gen confidence graph\n";
+	std::cout << "Generating confidence graph... ";
 	for (auto & c : simple_contours) { //for every contour
 		for (auto & d : demps) { //for every point
 			for (auto & e : d->connections) { //for every edge connection to that point
@@ -305,12 +273,14 @@ void HeightMapBuilder::generate_confidence_graph() {
 		}
 	}
 
-	std::cout << "sort confidence conenctions\n";
+	std::cout << " Done\n";
+	std::cout << "Sorting confidence connections... ";
 	for (auto & c : simple_contours) {
 		std::sort(c->links.begin(), c->links.end(), [](auto & left, auto & right) {
 			return abs(left->confidence) > abs(right->confidence);
 		});
 	}
+	std::cout << " Done\n";
 	
 
 	/*
@@ -323,7 +293,7 @@ void HeightMapBuilder::generate_confidence_graph() {
 
 simpleContour * HeightMapBuilder::bottleneck() {
 
-	std::cout << "bottleneck pathfinding\n";
+	std::cout << "Bottleneck pathfinding...";
 	simpleContour * source = nullptr;
 
 	for (auto & find_strongest : simple_contours) {
@@ -387,7 +357,9 @@ simpleContour * HeightMapBuilder::bottleneck() {
 		current->visited = true;
 	}
 
-	std::cout << "reversing links to generate a tree\n";
+	std::cout << " Done\n";
+
+	std::cout << "Reversing links to generate a tree...";
 
 	//reverse links;
 	for (auto & sc : simple_contours) {
@@ -396,6 +368,7 @@ simpleContour * HeightMapBuilder::bottleneck() {
 		}
 	}
 
+	std::cout << " Done\n";
 
 	return source;
 	
@@ -406,18 +379,20 @@ simpleContour * HeightMapBuilder::bottleneck() {
 void HeightMapBuilder::traverse_graph() {
 	simpleContour * origin = bottleneck();
 
-	std::cout << "propagate\n";
+	std::cout << "Propagating elevation through tree... ";
 
 	//simpleContour* origin = simple_contours[50];
 	origin->elevation = 0;
 	origin->propagate_elevation();
 
-	std::cout << "\n";
+	std::cout << " Done\n";
 }
 
 void HeightMapBuilder::normalize_elevations() {
 
 	//find highet and lowest in graph
+	std::cout << "Normalizing elevations...\n";
+	
 
 	int lowest = INT_MAX;
 	int highest = INT_MIN;
@@ -432,9 +407,9 @@ void HeightMapBuilder::normalize_elevations() {
 		highest = std::max(highest, c->elevation);
 	}
 
+	std::cout << "    Invalid elevation count: " << count << "\n";
+	std::cout << "    Range: " << lowest << "m to " << highest << "m\n";
 
-	std::cout << "error: " << count << "\n";
-	std::cout << lowest << " -> " << highest << "\n";
 
 	//adjust so lowest is at 0m
 
@@ -449,7 +424,6 @@ void HeightMapBuilder::normalize_elevations() {
 	//apply colours
 
 	float col_scale = 255.0f / (float)highest;
-	std::cout << highest << "m\n";
 	for (auto & c : simple_contours) {
 		if (c->elevation == -6969) {
 			/////////////////////////c->contour->set_colour(ofColor::red);
@@ -458,6 +432,11 @@ void HeightMapBuilder::normalize_elevations() {
 		ofColor height = ofColor(c->elevation * col_scale, 175, c->elevation * col_scale);
 		/////////////////c->contour->set_colour(height);
 	}
+
+
+	std::cout << "    Map height: " << highest << "m\n";
+
+	//std::cout << "Done\n";
 }
 
 void HeightMapBuilder::draw_triangulation() {
@@ -491,11 +470,56 @@ void HeightMapBuilder::draw_triangulation() {
 
 }
 
+
+void HeightMapBuilder::calculate_shapes() {
+
+	std::cout << "Calculating mesh shapes:\n";
+	std::cout << "   |----------|\n";
+	std::cout << "    ";
+
+	int total = constrained_edges.size() * tri_edges.size();
+
+	int count = 0;
+	float num = 0;
+
+	int num_hashes = 0;
+
+	for (auto & b : tri_edges) {
+
+		if ((float)count / (float)(tri_edges.size()) * 10 > num_hashes) {
+			std::cout << "#";
+			num_hashes++;
+		}
+
+		for (auto & a : cdt.fixedEdges) {
+
+			if (b->v1->contour != b->v2->contour) {
+				continue;
+			} //cant be a contour line if both ends are diff contours
+			if (a.v1() >= demps.size() || a.v2() >= demps.size()) {
+				continue;
+			} //invalid overlaps
+
+			if ((demps[a.v1()] == b->v1 && demps[a.v2()] == b->v2) || (demps[a.v1()] == b->v2 && demps[a.v2()] == b->v1)) {
+				//count++;
+				b->shape = 0;
+				break;
+			}
+
+		}
+		count++;
+	}
+
+
+
+	std::cout << "\n";
+}
+
 void HeightMapBuilder::generate_mesh() {
 
 	int original_num_points = demps.size();
 
-	std::cout << "generating mesh:\n";
+	std::cout << "Generating mesh:\n";
 
 	std::ofstream mesh("D:/Projects/OrienteeringSim/models/mesh.obj");
 
@@ -624,7 +648,7 @@ void HeightMapBuilder::generate_mesh() {
 		mesh << f;
 	}
 
-	std::cout << bad << " out of " << cdt.triangles.size() << " triangles were ignored (invalid vertex index)\n";
+	std::cout << "    " << bad << " out of " << cdt.triangles.size() << " triangles were ignored (invalid vertex index)\n";
 	//caused by overlap
 	
 	mesh.close();

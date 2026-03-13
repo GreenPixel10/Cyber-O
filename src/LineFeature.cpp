@@ -490,9 +490,9 @@ ManualLink::ManualLink(LineFeature * A_, int Aperc_, LineFeature * B_, int Bperc
 	colour = colour_;
 
 	if (!A || !B) {
-		std::cout << "Invalid Manual Link Created!!!" << "\n";
+		//std::cout << "Invalid Manual Link Created!!!" << "\n";
 	} else {
-		std::cout << "created manual link between " << A->get_debug() << " and " << B->get_debug() << "\n";
+		//std::cout << "created manual link between " << A->get_debug() << " and " << B->get_debug() << "\n";
 	}
 }
 

@@ -43,6 +43,7 @@ void SlopeDetector::auto_detect_slope() {
 
 
 	/* slope detetction */
+	std::cout << "Auto-detecting slopes:\n";
 	slope_from_directional_points(); //slope from eg. slope tags
 	slope_from_directional_linears(); //slope from eg. cliffs
 	apply_contour_leaners(); //confirm slope absed on liklihoods
@@ -51,6 +52,7 @@ void SlopeDetector::auto_detect_slope() {
 
 	std::cout << get_percent_verified() << "% of contours verified\n";
 	std::cout << get_num_unverified() << " contours could not be verified\n";
+	std::cout << "\n";
 
 }
 
@@ -81,7 +83,7 @@ void SlopeDetector::set_debug_colours() {
 
 void SlopeDetector::print_contour_amount(bool only_valid) {
 	if (!only_valid) {
-		std::cout << ">> " << contours.size() << " contours exist\n";
+		std::cout << "" << contours.size() << " contours exist\n";
 	}
 	else {
 		int t = 0;
@@ -90,7 +92,7 @@ void SlopeDetector::print_contour_amount(bool only_valid) {
 				t++;
 			}
 		}
-		std::cout << ">> " << t << " valid contours exist\n";
+		std::cout << "" << t << " valid contours exist\n";
 	}
 }
 
@@ -277,7 +279,8 @@ void SlopeDetector::detect_contour_gaps() {
 
 int SlopeDetector::auto_classify_gaps(bool unambigous_only) {
 
-	
+	std::cout << "Auto detecting gaps... ";
+
 	int unambigous_count = 0;
 	int semiambigous_count = 0;
 
@@ -355,8 +358,9 @@ int SlopeDetector::auto_classify_gaps(bool unambigous_only) {
 
 	}
 
-	std::cout << "Unambiguous: " << unambigous_count << "\n";
-	std::cout << "Semiambigious: " << semiambigous_count << "\n";
+	std::cout << unambigous_count << " gaps detected";
+	if(!unambigous_only) {std::cout << " plus " << semiambigous_count << "potential gaps";}
+	std::cout << "\n";
 
 	return unambigous_count + semiambigous_count;
 }
@@ -406,7 +410,7 @@ void SlopeDetector::create_manual_link(LineFeature * f1, bool is_end_of_f1, Line
 }
 
 void SlopeDetector::fill_gaps() {
-	std::cout << "Filling gaps:\n";
+	std::cout << "Filling gaps... ";
 	int count = -1;
 	while (count != 0) {
 		count = 0;
@@ -419,7 +423,7 @@ void SlopeDetector::fill_gaps() {
 			}
 		}
 	}
-	std::cout << "Gap filling complete\n";
+	std::cout << " Gap filling complete\n";
 }
 
 void SlopeDetector::cleanup_deleted_contours() {
@@ -438,7 +442,7 @@ void SlopeDetector::cleanup_deleted_contours() {
 
 
 void SlopeDetector::slope_from_directional_points(){
-
+	std::cout << "Analyzing point features... ";
 	std::vector<int> points_to_compare = {S_MIN_CLIFF, S_SLOPE_TAG, S_IMPASSABLE_MIN_CLIFF};
 
 	for (int &point_symbol : points_to_compare){
@@ -486,10 +490,11 @@ void SlopeDetector::slope_from_directional_points(){
 			}
 		}
 	}
+	std::cout << " Done\n";
 }
 
 void SlopeDetector::slope_from_directional_linears() {
-
+	std::cout << "Analyzing line features... ";
 	std::vector<int> linears_to_compare = { S_CLIFF, S_IMPASSABLE_CLIFF, S_EARTH_BANK};
 
 	for (int & linear_symbol : linears_to_compare) {
@@ -546,9 +551,11 @@ void SlopeDetector::slope_from_directional_linears() {
 			}
 		}
 	}
+	std::cout << " Done\n";
 }
 
 void SlopeDetector::slope_from_closed_loops() {
+	std::cout << "Analyzing loops... ";
 	for (auto c : (*features)[S_CONTOUR]) {
 		LineFeature * contour = dynamic_cast<LineFeature *>(c);
 
@@ -564,17 +571,24 @@ void SlopeDetector::slope_from_closed_loops() {
 			}
 		
 	}
+	std::cout << " Done\n";
 }
 
 void SlopeDetector::slope_from_similarity() {
 //return;
 //std::cout << (*features)[S_CONTOUR].size() << " <<\n";
+	std::cout << "Detecting remaining slopes via similarity:\n";
 
 #define SIMILARITY_LENGTH_THRESHOLD 175 //metres
 
 	int verified_count = -1;
 
+	int pass_number = 1;
+
 	while (verified_count != 0) {
+
+		std::cout << "    Pass " << pass_number << ": ";
+
 		verified_count = 0;
 
 		for (auto cA : (*features)[S_CONTOUR]) {
@@ -617,7 +631,8 @@ void SlopeDetector::slope_from_similarity() {
 			}
 		}
 
-		std::cout << "verified " << verified_count << " contours via similarity\n";
+		std::cout << "Verified " << verified_count << " contours via similarity\n";
+		pass_number++;
 	}
 }
 

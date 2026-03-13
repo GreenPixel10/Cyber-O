@@ -16,8 +16,9 @@ void ofApp::setup() {
 	//load_map("D:/Projects/OrienteeringSim/bruce.omap");
 	//load_map("D:/Projects/OrienteeringSim/Barrens.omap");
 	//load_map("D:/Projects/OrienteeringSim/Cite.omap");
-	load_map("D:/Projects/OrienteeringSim/Green.omap");
+	//load_map("D:/Projects/OrienteeringSim/Green.omap");
 	//load_map("D:/Projects/OrienteeringSim/Cal.omap");
+	load_map("D:/Projects/OrienteeringSim/philipe.omap");
 
 	
 	//load_map("D:/Projects/OrienteeringSim/test2.omap");
@@ -40,6 +41,8 @@ void ofApp::setup() {
 	sd.set_features(&features);
 	sd.prepass_gaps();
 
+	std::cout << "\n";
+
 	state = GAPS;
 
 
@@ -56,16 +59,20 @@ void ofApp::init_camera() {
 }
 
 void ofApp::load_map(std::string mapname) {
-
-
+	
+	std::cout << "Loading map file...";
 
 	if (!omap.load(mapname)) {
 		ofLogError() << "Couldn't load file";
 	}
+
+	std::cout << " Done\n";
+
 }
 
 void ofApp::load_features() {
 
+	std::cout << "Parsing features... ";
 
 	auto parts = omap.findFirst("//parts");
 	auto partlist = parts.getChildren("part");
@@ -111,7 +118,7 @@ void ofApp::load_features() {
 		}
 	}
 
-	std::cout << line_features.size() << " line features loaded\n";
+	std::cout  << "Done (" << line_features.size() << " line features loaded)\n";
 
 
 }

@@ -109,9 +109,11 @@ class HeightMapBuilder {
 		void traverse_graph();
 		void normalize_elevations();
 
+		void calculate_shapes();
+		void generate_mesh();
+
 		void draw_triangulation();
 		void draw_DEM();
-		void generate_mesh();
 
 	private:
 
